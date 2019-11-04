@@ -122,76 +122,82 @@ class BarRenderer<D>
   /// Generates an [AnimatedBar] to represent the previous and current state
   /// of one bar on the chart.
   @override
-  AnimatedBar<D> makeAnimatedBar(
-      {String key,
-      ImmutableSeries<D> series,
-      List<int> dashPattern,
-      dynamic datum,
-      Color color,
-      BarRendererElement<D> details,
-      D domainValue,
-      ImmutableAxis<D> domainAxis,
-      int domainWidth,
-      num measureValue,
-      num measureOffsetValue,
-      ImmutableAxis<num> measureAxis,
-      double measureAxisPosition,
-      Color fillColor,
-      FillPatternType fillPattern,
-      double strokeWidthPx,
-      int barGroupIndex,
-      double previousBarGroupWeight,
-      double barGroupWeight,
-      int numBarGroups,
-      bool measureIsNull,
-      bool measureIsNegative}) {
+  AnimatedBar<D> makeAnimatedBar({
+    String key,
+    ImmutableSeries<D> series,
+    List<int> dashPattern,
+    dynamic datum,
+    Color color,
+    BarRendererElement<D> details,
+    D domainValue,
+    ImmutableAxis<D> domainAxis,
+    int domainWidth,
+    num measureValue,
+    num measureOffsetValue,
+    ImmutableAxis<num> measureAxis,
+    double measureAxisPosition,
+    Color fillColor,
+    FillPatternType fillPattern,
+    double strokeWidthPx,
+    int barGroupIndex,
+    double previousBarGroupWeight,
+    double barGroupWeight,
+    int numBarGroups,
+    bool measureIsNull,
+    bool measureIsNegative,
+    num barWidthPx,
+  }) {
     return new AnimatedBar<D>(
         key: key, datum: datum, series: series, domainValue: domainValue)
       ..setNewTarget(makeBarRendererElement(
-          color: color,
-          dashPattern: dashPattern,
-          details: details,
-          domainValue: domainValue,
-          domainAxis: domainAxis,
-          domainWidth: domainWidth,
-          measureValue: measureValue,
-          measureOffsetValue: measureOffsetValue,
-          measureAxisPosition: measureAxisPosition,
-          measureAxis: measureAxis,
-          fillColor: fillColor,
-          fillPattern: fillPattern,
-          strokeWidthPx: strokeWidthPx,
-          barGroupIndex: barGroupIndex,
-          previousBarGroupWeight: previousBarGroupWeight,
-          barGroupWeight: barGroupWeight,
-          numBarGroups: numBarGroups,
-          measureIsNull: measureIsNull,
-          measureIsNegative: measureIsNegative));
+        color: color,
+        dashPattern: dashPattern,
+        details: details,
+        domainValue: domainValue,
+        domainAxis: domainAxis,
+        domainWidth: domainWidth,
+        measureValue: measureValue,
+        measureOffsetValue: measureOffsetValue,
+        measureAxisPosition: measureAxisPosition,
+        measureAxis: measureAxis,
+        fillColor: fillColor,
+        fillPattern: fillPattern,
+        strokeWidthPx: strokeWidthPx,
+        barGroupIndex: barGroupIndex,
+        previousBarGroupWeight: previousBarGroupWeight,
+        barGroupWeight: barGroupWeight,
+        numBarGroups: numBarGroups,
+        measureIsNull: measureIsNull,
+        measureIsNegative: measureIsNegative,
+        barWidthPx: barWidthPx,
+      ));
   }
 
   /// Generates a [BarRendererElement] to represent the rendering data for one
   /// bar on the chart.
   @override
-  BarRendererElement<D> makeBarRendererElement(
-      {Color color,
-      List<int> dashPattern,
-      BarRendererElement<D> details,
-      D domainValue,
-      ImmutableAxis<D> domainAxis,
-      int domainWidth,
-      num measureValue,
-      num measureOffsetValue,
-      ImmutableAxis<num> measureAxis,
-      double measureAxisPosition,
-      Color fillColor,
-      FillPatternType fillPattern,
-      double strokeWidthPx,
-      int barGroupIndex,
-      double previousBarGroupWeight,
-      double barGroupWeight,
-      int numBarGroups,
-      bool measureIsNull,
-      bool measureIsNegative}) {
+  BarRendererElement<D> makeBarRendererElement({
+    Color color,
+    List<int> dashPattern,
+    BarRendererElement<D> details,
+    D domainValue,
+    ImmutableAxis<D> domainAxis,
+    int domainWidth,
+    num measureValue,
+    num measureOffsetValue,
+    ImmutableAxis<num> measureAxis,
+    double measureAxisPosition,
+    Color fillColor,
+    FillPatternType fillPattern,
+    double strokeWidthPx,
+    int barGroupIndex,
+    double previousBarGroupWeight,
+    double barGroupWeight,
+    int numBarGroups,
+    bool measureIsNull,
+    bool measureIsNegative,
+    num barWidthPx,
+  }) {
     return new BarRendererElement<D>()
       ..color = color
       ..dashPattern = dashPattern
@@ -203,16 +209,18 @@ class BarRenderer<D>
       ..measureIsNull = measureIsNull
       ..measureIsNegative = measureIsNegative
       ..bounds = _getBarBounds(
-          domainValue,
-          domainAxis,
-          domainWidth,
-          measureValue,
-          measureOffsetValue,
-          measureAxis,
-          barGroupIndex,
-          previousBarGroupWeight,
-          barGroupWeight,
-          numBarGroups);
+        domainValue,
+        domainAxis,
+        domainWidth,
+        measureValue,
+        measureOffsetValue,
+        measureAxis,
+        barGroupIndex,
+        previousBarGroupWeight,
+        barGroupWeight,
+        numBarGroups,
+        barWidthPx?.toDouble(),
+      );
   }
 
   @override
@@ -375,16 +383,18 @@ class BarRenderer<D>
 
   /// Generates a set of bounds that describe a bar.
   Rectangle<int> _getBarBounds(
-      D domainValue,
-      ImmutableAxis<D> domainAxis,
-      int domainWidth,
-      num measureValue,
-      num measureOffsetValue,
-      ImmutableAxis<num> measureAxis,
-      int barGroupIndex,
-      double previousBarGroupWeight,
-      double barGroupWeight,
-      int numBarGroups) {
+    D domainValue,
+    ImmutableAxis<D> domainAxis,
+    int domainWidth,
+    num measureValue,
+    num measureOffsetValue,
+    ImmutableAxis<num> measureAxis,
+    int barGroupIndex,
+    double previousBarGroupWeight,
+    double barGroupWeight,
+    int numBarGroups, [
+    double customWidthPx,
+  ]) {
     // TODO: Investigate why this is negative for a DateTime domain
     // in RTL mode.
     domainWidth = domainWidth.abs();
@@ -399,7 +409,12 @@ class BarRenderer<D>
     // only have one series, or are stacked, then barWidth should equal
     // domainWidth.
     int spacingLoss = (_barGroupInnerPadding * (numBarGroups - 1));
-    int barWidth = ((domainWidth - spacingLoss) * barGroupWeight).round();
+    int barWidth;
+    if (customWidthPx == null) {
+      barWidth = ((domainWidth - spacingLoss) * barGroupWeight).round();
+    } else {
+      barWidth = customWidthPx.round();
+    }
 
     // Make sure that bars are at least one pixel wide, so that they will always
     // be visible on the chart. Ideally we should do something clever with the

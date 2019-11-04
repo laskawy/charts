@@ -128,29 +128,31 @@ class BarTargetLineRenderer<D> extends BaseBarRenderer<D,
   /// Generates an [_AnimatedBarTargetLine] to represent the previous and
   /// current state of one bar target line on the chart.
   @override
-  _AnimatedBarTargetLine<D> makeAnimatedBar(
-      {String key,
-      ImmutableSeries<D> series,
-      dynamic datum,
-      Color color,
-      List<int> dashPattern,
-      _BarTargetLineRendererElement details,
-      D domainValue,
-      ImmutableAxis<D> domainAxis,
-      int domainWidth,
-      num measureValue,
-      num measureOffsetValue,
-      ImmutableAxis<num> measureAxis,
-      double measureAxisPosition,
-      Color fillColor,
-      FillPatternType fillPattern,
-      int barGroupIndex,
-      double previousBarGroupWeight,
-      double barGroupWeight,
-      int numBarGroups,
-      double strokeWidthPx,
-      bool measureIsNull,
-      bool measureIsNegative}) {
+  _AnimatedBarTargetLine<D> makeAnimatedBar({
+    String key,
+    ImmutableSeries<D> series,
+    dynamic datum,
+    Color color,
+    List<int> dashPattern,
+    _BarTargetLineRendererElement details,
+    D domainValue,
+    ImmutableAxis<D> domainAxis,
+    int domainWidth,
+    num measureValue,
+    num measureOffsetValue,
+    ImmutableAxis<num> measureAxis,
+    double measureAxisPosition,
+    Color fillColor,
+    FillPatternType fillPattern,
+    int barGroupIndex,
+    double previousBarGroupWeight,
+    double barGroupWeight,
+    int numBarGroups,
+    double strokeWidthPx,
+    bool measureIsNull,
+    bool measureIsNegative,
+    num barWidthPx, // TODO: Use this property
+  }) {
     return new _AnimatedBarTargetLine(
         key: key, datum: datum, series: series, domainValue: domainValue)
       ..setNewTarget(makeBarRendererElement(
@@ -178,26 +180,28 @@ class BarTargetLineRenderer<D> extends BaseBarRenderer<D,
   /// Generates a [_BarTargetLineRendererElement] to represent the rendering
   /// data for one bar target line on the chart.
   @override
-  _BarTargetLineRendererElement makeBarRendererElement(
-      {Color color,
-      List<int> dashPattern,
-      _BarTargetLineRendererElement details,
-      D domainValue,
-      ImmutableAxis<D> domainAxis,
-      int domainWidth,
-      num measureValue,
-      num measureOffsetValue,
-      ImmutableAxis<num> measureAxis,
-      double measureAxisPosition,
-      Color fillColor,
-      FillPatternType fillPattern,
-      double strokeWidthPx,
-      int barGroupIndex,
-      double previousBarGroupWeight,
-      double barGroupWeight,
-      int numBarGroups,
-      bool measureIsNull,
-      bool measureIsNegative}) {
+  _BarTargetLineRendererElement makeBarRendererElement({
+    Color color,
+    List<int> dashPattern,
+    _BarTargetLineRendererElement details,
+    D domainValue,
+    ImmutableAxis<D> domainAxis,
+    int domainWidth,
+    num measureValue,
+    num measureOffsetValue,
+    ImmutableAxis<num> measureAxis,
+    double measureAxisPosition,
+    Color fillColor,
+    FillPatternType fillPattern,
+    double strokeWidthPx,
+    int barGroupIndex,
+    double previousBarGroupWeight,
+    double barGroupWeight,
+    int numBarGroups,
+    bool measureIsNull,
+    bool measureIsNegative,
+    num barWidthPx, // TODO: Use this property
+  }) {
     return new _BarTargetLineRendererElement()
       ..color = color
       ..dashPattern = dashPattern

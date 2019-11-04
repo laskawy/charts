@@ -60,6 +60,7 @@ class MutableSeries<D> extends ImmutableSeries<D> {
   AccessorFn<String> labelAccessorFn;
   AccessorFn<TextStyleSpec> insideLabelStyleAccessorFn;
   AccessorFn<TextStyleSpec> outsideLabelStyleAccessorFn;
+  AccessorFn<num> barWidthPxFn;
 
   final _attrs = new SeriesAttributes();
 
@@ -108,6 +109,7 @@ class MutableSeries<D> extends ImmutableSeries<D> {
     labelAccessorFn = series.labelAccessorFn ?? (i) => domainFn(i).toString();
     insideLabelStyleAccessorFn = series.insideLabelStyleAccessorFn;
     outsideLabelStyleAccessorFn = series.outsideLabelStyleAccessorFn;
+    barWidthPxFn = series.barWidthPxFn;
 
     radiusPxFn = series.radiusPxFn;
     strokeWidthPxFn = series.strokeWidthPxFn;
@@ -152,6 +154,7 @@ class MutableSeries<D> extends ImmutableSeries<D> {
     outsideLabelStyleAccessorFn = other.outsideLabelStyleAccessorFn;
     radiusPxFn = other.radiusPxFn;
     strokeWidthPxFn = other.strokeWidthPxFn;
+    barWidthPxFn = other.barWidthPxFn;
 
     _attrs.mergeFrom(other._attrs);
     measureAxis = other.measureAxis;
@@ -257,6 +260,8 @@ abstract class ImmutableSeries<D> {
   AccessorFn<num> get radiusPxFn;
 
   AccessorFn<num> get strokeWidthPxFn;
+
+  AccessorFn<num> get barWidthPxFn;
 
   void setAttr<R>(AttributeKey<R> key, R value);
 

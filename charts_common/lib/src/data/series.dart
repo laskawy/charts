@@ -101,38 +101,42 @@ class Series<T, D> {
   final AccessorFn<TextStyleSpec> insideLabelStyleAccessorFn;
   final AccessorFn<TextStyleSpec> outsideLabelStyleAccessorFn;
 
+  final AccessorFn<num> barWidthPxFn;
+
   // TODO: should this be immutable as well? If not, should any of
   // the non-required ones be final?
   final SeriesAttributes attributes = new SeriesAttributes();
 
-  factory Series(
-      {@required String id,
-      @required List<T> data,
-      @required TypedAccessorFn<T, D> domainFn,
-      @required TypedAccessorFn<T, num> measureFn,
-      String displayName,
-      Color seriesColor,
-      TypedAccessorFn<T, Color> areaColorFn,
-      TypedAccessorFn<T, Color> colorFn,
-      TypedAccessorFn<T, List<int>> dashPatternFn,
-      TypedAccessorFn<T, DomainFormatter<D>> domainFormatterFn,
-      TypedAccessorFn<T, D> domainLowerBoundFn,
-      TypedAccessorFn<T, D> domainUpperBoundFn,
-      TypedAccessorFn<T, Color> fillColorFn,
-      TypedAccessorFn<T, Color> patternColorFn,
-      TypedAccessorFn<T, FillPatternType> fillPatternFn,
-      TypedAccessorFn<T, String> keyFn,
-      TypedAccessorFn<T, String> labelAccessorFn,
-      TypedAccessorFn<T, TextStyleSpec> insideLabelStyleAccessorFn,
-      TypedAccessorFn<T, TextStyleSpec> outsideLabelStyleAccessorFn,
-      TypedAccessorFn<T, MeasureFormatter> measureFormatterFn,
-      TypedAccessorFn<T, num> measureLowerBoundFn,
-      TypedAccessorFn<T, num> measureUpperBoundFn,
-      TypedAccessorFn<T, num> measureOffsetFn,
-      bool overlaySeries = false,
-      TypedAccessorFn<T, num> radiusPxFn,
-      String seriesCategory,
-      TypedAccessorFn<T, num> strokeWidthPxFn}) {
+  factory Series({
+    @required String id,
+    @required List<T> data,
+    @required TypedAccessorFn<T, D> domainFn,
+    @required TypedAccessorFn<T, num> measureFn,
+    String displayName,
+    Color seriesColor,
+    TypedAccessorFn<T, Color> areaColorFn,
+    TypedAccessorFn<T, Color> colorFn,
+    TypedAccessorFn<T, List<int>> dashPatternFn,
+    TypedAccessorFn<T, DomainFormatter<D>> domainFormatterFn,
+    TypedAccessorFn<T, D> domainLowerBoundFn,
+    TypedAccessorFn<T, D> domainUpperBoundFn,
+    TypedAccessorFn<T, Color> fillColorFn,
+    TypedAccessorFn<T, Color> patternColorFn,
+    TypedAccessorFn<T, FillPatternType> fillPatternFn,
+    TypedAccessorFn<T, String> keyFn,
+    TypedAccessorFn<T, String> labelAccessorFn,
+    TypedAccessorFn<T, TextStyleSpec> insideLabelStyleAccessorFn,
+    TypedAccessorFn<T, TextStyleSpec> outsideLabelStyleAccessorFn,
+    TypedAccessorFn<T, MeasureFormatter> measureFormatterFn,
+    TypedAccessorFn<T, num> measureLowerBoundFn,
+    TypedAccessorFn<T, num> measureUpperBoundFn,
+    TypedAccessorFn<T, num> measureOffsetFn,
+    bool overlaySeries = false,
+    TypedAccessorFn<T, num> radiusPxFn,
+    String seriesCategory,
+    TypedAccessorFn<T, num> strokeWidthPxFn,
+    TypedAccessorFn<T, num> barWidthPxFn,
+  }) {
     // Wrap typed accessors.
     final _domainFn = (int index) => domainFn(data[index], index);
     final _measureFn = (int index) => measureFn(data[index], index);
@@ -190,6 +194,10 @@ class Series<T, D> {
         ? null
         : (int index) => strokeWidthPxFn(data[index], index);
 
+    final _barWidthPxFn = barWidthPxFn != null
+        ? (int index) => barWidthPxFn(data[index], index)
+        : null;
+
     return new Series._internal(
       id: id,
       data: data,
@@ -217,6 +225,7 @@ class Series<T, D> {
       seriesCategory: seriesCategory,
       seriesColor: seriesColor,
       strokeWidthPxFn: _strokeWidthPxFn,
+      barWidthPxFn: _barWidthPxFn,
     );
   }
 
@@ -248,6 +257,7 @@ class Series<T, D> {
     this.seriesCategory,
     this.seriesColor,
     this.strokeWidthPxFn,
+    this.barWidthPxFn,
   });
 
   void setAttribute<R>(AttributeKey<R> key, R value) {
