@@ -283,23 +283,47 @@ class BarRenderer<D>
     bool roundBottomLeft;
     bool roundBottomRight;
 
+    bool roundStart = cornerStrategy.roundStart;
+    bool roundEnd = cornerStrategy.roundEnd;
+
+    /**
+     * VERTICAL                 HORIZONTAL
+     * 
+     * (------)                 (--)
+     *                          |  |
+     * (------)                 (--)
+     */
+
+    bool isTopLeftAtStart;
+    bool isTopRightAtStart;
+    bool isBottomLeftAtStart;
+    bool isBottomRightAtStart;
     if (measureIsNegative) {
       // Negative bars should be rounded towards the negative axis direction.
       // In vertical mode, this is the bottom. In horizontal mode, this is the
       // left side of the chart for LTR, or the right side for RTL.
-      roundTopLeft = !renderingVertically && !isRtl ? true : false;
-      roundTopRight = !renderingVertically && isRtl ? true : false;
-      roundBottomLeft = renderingVertically || !isRtl ? true : false;
-      roundBottomRight = renderingVertically || isRtl ? true : false;
+      isTopLeftAtStart = renderingVertically || isRtl;
+      isTopRightAtStart = renderingVertically || !isRtl;
+      isBottomLeftAtStart = !renderingVertically && isRtl;
+      isBottomRightAtStart = !renderingVertically && !isRtl;
     } else {
       // Positive bars should be rounded towards the positive axis direction.
       // In vertical mode, this is the top. In horizontal mode, this is the
       // right side of the chart for LTR, or the left side for RTL.
-      roundTopLeft = renderingVertically || isRtl ? true : false;
-      roundTopRight = isRtl ? false : true;
-      roundBottomLeft = isRtl ? true : false;
-      roundBottomRight = renderingVertically || isRtl ? false : true;
+      isTopLeftAtStart = !renderingVertically && !isRtl;
+      isTopRightAtStart = !renderingVertically && isRtl;
+      isBottomLeftAtStart = renderingVertically || !isRtl;
+      isBottomRightAtStart = renderingVertically || isRtl;
     }
+
+    roundTopLeft =
+        (isTopLeftAtStart && roundStart) || (!isTopLeftAtStart && roundEnd);
+    roundTopRight =
+        (isTopRightAtStart && roundStart) || (!isTopRightAtStart && roundEnd);
+    roundBottomLeft = (isBottomLeftAtStart && roundStart) ||
+        (!isBottomLeftAtStart && roundEnd);
+    roundBottomRight = (isBottomRightAtStart && roundStart) ||
+        (!isBottomRightAtStart && roundEnd);
 
     final barStack = new CanvasBarStack(
       bars,

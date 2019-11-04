@@ -81,13 +81,31 @@ class BarRendererConfig<D> extends BaseBarRendererConfig<D> {
 abstract class CornerStrategy {
   /// Returns the radius of the rounded corners in pixels.
   int getRadius(int barWidth);
+
+  /// If true, the corners of the start edge is rounded. 
+  /// If the value is positive, the start is at the bottom.
+  bool get roundStart;
+
+  /// If true, the corners of the end edge is rounded.
+  /// If the value is positive, the end is at the top.
+  bool get roundEnd;
 }
 
-/// Strategy for constant corner radius.
+/// Strategy for constant corner radius.'
 class ConstCornerStrategy implements CornerStrategy {
   final int radius;
 
-  const ConstCornerStrategy(this.radius);
+  @override
+  final bool roundStart;
+
+  @override
+  final bool roundEnd;
+
+  const ConstCornerStrategy(
+    this.radius, {
+    this.roundStart = false,
+    this.roundEnd = true,
+  });
 
   @override
   int getRadius(_) => radius;
