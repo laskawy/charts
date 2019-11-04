@@ -49,6 +49,8 @@ const stackKeyKey = const AttributeKey<String>('BarRenderer.stackKey');
 const barElementsKey =
     const AttributeKey<List<BaseBarRendererElement>>('BarRenderer.elements');
 
+const barWidthKey = AttributeKey<num>('BarRenderer.barWidth');
+
 /// Base class for bar renderers that implements common stacking and grouping
 /// logic.
 ///
@@ -134,6 +136,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       var measureOffsetFn = series.measureOffsetFn;
       var fillPatternFn = series.fillPatternFn;
       var strokeWidthPxFn = series.strokeWidthPxFn;
+      var barWidthPxFn = series.barWidthPxFn;
 
       series.dashPatternFn ??= (_) => config.dashPattern;
 
@@ -356,6 +359,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       final previousBarGroupWeight = series.getAttr(previousBarGroupWeightKey);
       final barGroupWeight = series.getAttr(barGroupWeightKey);
       final measureAxisPosition = measureAxis.getLocation(0.0);
+      final barWidthPxFn = series.barWidthPxFn;
 
       var elementsList = series.getAttr(barElementsKey);
 
@@ -423,6 +427,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
               strokeWidthPx: details.strokeWidthPx,
               measureIsNull: measureIsNull,
               measureIsNegative: measureIsNegative,
+              barWidthPx: barWidthPxFn?.call(barIndex),
             );
 
             barStackList.add(animatingBar);
@@ -450,25 +455,27 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
         // Get the barElement we are going to setup.
         // Optimization to prevent allocation in non-animating case.
         BaseBarRendererElement barElement = makeBarRendererElement(
-            barGroupIndex: barGroupIndex,
-            previousBarGroupWeight: previousBarGroupWeight,
-            barGroupWeight: barGroupWeight,
-            color: colorFn(barIndex),
-            dashPattern: dashPatternFn(barIndex),
-            details: details,
-            domainValue: domainFn(barIndex),
-            domainAxis: domainAxis,
-            domainWidth: domainAxis.rangeBand.round(),
-            fillColor: fillColorFn(barIndex),
-            fillPattern: details.fillPattern,
-            measureValue: measureValue,
-            measureOffsetValue: details.measureOffset,
-            measureAxisPosition: measureAxisPosition,
-            measureAxis: measureAxis,
-            numBarGroups: barGroupCount,
-            strokeWidthPx: details.strokeWidthPx,
-            measureIsNull: measureIsNull,
-            measureIsNegative: measureIsNegative);
+          barGroupIndex: barGroupIndex,
+          previousBarGroupWeight: previousBarGroupWeight,
+          barGroupWeight: barGroupWeight,
+          color: colorFn(barIndex),
+          dashPattern: dashPatternFn(barIndex),
+          details: details,
+          domainValue: domainFn(barIndex),
+          domainAxis: domainAxis,
+          domainWidth: domainAxis.rangeBand.round(),
+          fillColor: fillColorFn(barIndex),
+          fillPattern: details.fillPattern,
+          measureValue: measureValue,
+          measureOffsetValue: details.measureOffset,
+          measureAxisPosition: measureAxisPosition,
+          measureAxis: measureAxis,
+          numBarGroups: barGroupCount,
+          strokeWidthPx: details.strokeWidthPx,
+          measureIsNull: measureIsNull,
+          measureIsNegative: measureIsNegative,
+          barWidthPx: barWidthPxFn?.call(barIndex),
+        );
 
         animatingBar.setNewTarget(barElement);
       }

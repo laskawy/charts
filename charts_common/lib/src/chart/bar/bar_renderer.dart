@@ -85,16 +85,17 @@ class BarRenderer<D>
     final numBarGroups = series.getAttr(barGroupCountKey);
 
     final bounds = _getBarBounds(
-        details.domain,
-        domainAxis,
-        domainAxis.rangeBand.round(),
-        details.measure,
-        details.measureOffset,
-        measureAxis,
-        barGroupIndex,
-        previousBarGroupWeight,
-        barGroupWeight,
-        numBarGroups);
+      details.domain,
+      domainAxis,
+      domainAxis.rangeBand.round(),
+      details.measure,
+      details.measureOffset,
+      measureAxis,
+      barGroupIndex,
+      previousBarGroupWeight,
+      barGroupWeight,
+      numBarGroups,
+    );
 
     Point<double> chartPosition;
 
