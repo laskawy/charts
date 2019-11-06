@@ -48,9 +48,9 @@ class CustomRoundedBars extends StatelessWidget {
     final random = new Random();
 
     final data = [
-      new OrdinalSales('2014', random.nextInt(100)),
+      new OrdinalSales('2014', random.nextInt(100) - 50),
       new OrdinalSales('2015', random.nextInt(100)),
-      new OrdinalSales('2016', random.nextInt(100)),
+      new OrdinalSales('2016', random.nextInt(100) - 50),
       new OrdinalSales('2017', random.nextInt(100)),
     ];
 
@@ -60,6 +60,8 @@ class CustomRoundedBars extends StatelessWidget {
         colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
         domainFn: (OrdinalSales sales, _) => sales.year,
         measureFn: (OrdinalSales sales, _) => sales.sales,
+        measureOffsetFn: (_, __) => 30, // range chart
+        barWidthPxFn: (_, __) => 16, // custom bar width
         data: data,
       )
     ];
@@ -76,7 +78,7 @@ class CustomRoundedBars extends StatelessWidget {
           // radius of 30.
           // To not have any rounded corners, use [NoCornerStrategy]
           // To change the radius of the bars, use [ConstCornerStrategy]
-          cornerStrategy: const charts.ConstCornerStrategy(30)),
+          cornerStrategy: const charts.ConstCornerStrategy(30, roundStart: true)),
     );
   }
 

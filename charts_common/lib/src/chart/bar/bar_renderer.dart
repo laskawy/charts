@@ -438,7 +438,7 @@ class BarRenderer<D>
     if (customWidthPx == null) {
       barWidth = ((domainWidth - spacingLoss) * barGroupWeight).round();
     } else {
-      barWidth = customWidthPx.round();
+      barWidth = ((customWidthPx) * barGroupWeight).round();
     }
 
     // Make sure that bars are at least one pixel wide, so that they will always
@@ -453,11 +453,19 @@ class BarRenderer<D>
 
     // Calculate the start and end of the bar, taking into account accumulated
     // padding for grouped bars.
-    int previousAverageWidth = adjustedBarGroupIndex > 0
-        ? ((domainWidth - spacingLoss) *
-                (previousBarGroupWeight / adjustedBarGroupIndex))
-            .round()
-        : 0;
+    int previousAverageWidth;
+    if (customWidthPx == null) {
+      previousAverageWidth = adjustedBarGroupIndex > 0
+          ? ((domainWidth - spacingLoss) *
+                  (previousBarGroupWeight / adjustedBarGroupIndex))
+              .round()
+          : 0;
+    } else {
+      previousAverageWidth = adjustedBarGroupIndex > 0
+          ? ((customWidthPx) * (previousBarGroupWeight / adjustedBarGroupIndex))
+              .round()
+          : 0;
+    }
 
     int domainStart = (domainAxis.getLocation(domainValue) -
             (domainWidth / 2) +
@@ -492,6 +500,24 @@ class BarRenderer<D>
       // Rectangle clamps to zero width/height
       bounds = new Rectangle<int>(min(measureStart, measureEnd), domainStart,
           (measureEnd - measureStart).abs(), domainEnd - domainStart);
+    }
+
+    if (customWidthPx != null) {
+      if (this.renderingVertically) {
+        bounds = Rectangle<int>(
+          (domainStart + (domainWidth - barWidth) / 2).round(),
+          measureEnd,
+          domainEnd - domainStart,
+          measureStart - measureEnd,
+        );
+      } else {
+        bounds = Rectangle<int>(
+          min(measureStart, measureEnd),
+          (domainStart + (domainWidth - barWidth) / 2).round(),
+          (measureEnd - measureStart).abs(),
+          domainEnd - domainStart,
+        );
+      }
     }
     return bounds;
   }
