@@ -83,11 +83,11 @@ abstract class CornerStrategy {
   int getRadius(int barWidth);
 
   /// If true, the corners of the start edge is rounded. 
-  /// If the value is positive, the start is at the bottom.
+  /// If the value is positive and the chart is rendered vertically, the start is at the bottom.
   bool get roundStart;
 
   /// If true, the corners of the end edge is rounded.
-  /// If the value is positive, the end is at the top.
+  /// If the value is positive and the chart is rendered vertically, the end is at the top.
   bool get roundEnd;
 }
 
