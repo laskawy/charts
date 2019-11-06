@@ -423,6 +423,8 @@ class BarRenderer<D>
     // TODO: Investigate why this is negative for a DateTime domain
     // in RTL mode.
     domainWidth = domainWidth.abs();
+    
+    final domainCenter = domainAxis.getLocation(domainValue);
 
     // If no weights were passed in, default to equal weight per bar.
     if (barGroupWeight == null) {
@@ -505,7 +507,7 @@ class BarRenderer<D>
     if (customWidthPx != null) {
       if (this.renderingVertically) {
         bounds = Rectangle<int>(
-          (domainStart + (domainWidth - barWidth) / 2).round(),
+          (domainCenter - barWidth / 2).round(),
           measureEnd,
           domainEnd - domainStart,
           measureStart - measureEnd,
@@ -513,7 +515,7 @@ class BarRenderer<D>
       } else {
         bounds = Rectangle<int>(
           min(measureStart, measureEnd),
-          (domainStart + (domainWidth - barWidth) / 2).round(),
+          (domainCenter - barWidth / 2).round(),
           (measureEnd - measureStart).abs(),
           domainEnd - domainStart,
         );
