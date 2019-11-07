@@ -107,7 +107,7 @@ class ChartCanvas implements common.ChartCanvas {
     _pointPainter.draw(
         canvas: canvas,
         paint: _paint,
-        point: point,
+        point: Point(point.x.round(), point.y.round()),
         radius: radius,
         fill: fill,
         stroke: stroke,
