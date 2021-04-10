@@ -134,8 +134,8 @@ abstract class BaseTickDrawStrategy<D> implements TickDrawStrategy<D> {
 
     axisLineStyle = graphicsFactory!.createLinePaint()
       ..color = axisLineStyleSpec?.color ?? labelStyle!.color
-      ..dashPattern = axisLineStyleSpec?.dashPattern
-      ..strokeWidth = axisLineStyleSpec?.thickness ?? 1;
+      ..dashPattern = axisLineStyleSpec!.dashPattern!
+      ..strokeWidth = axisLineStyleSpec.thickness ?? 1;
 
     tickLabelAnchor = labelAnchor ?? TickLabelAnchor.centered;
     tickLabelJustification =
