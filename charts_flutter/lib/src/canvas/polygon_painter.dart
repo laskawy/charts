@@ -31,13 +31,13 @@ class PolygonPainter {
   /// pattern will be repeated to derive an even number of values. "1,2,3" is
   /// equivalent to "1,2,3,1,2,3."
   void draw(
-      {Canvas canvas,
-      Paint paint,
-      List<Point> points,
-      Rectangle<num> clipBounds,
-      common.Color fill,
-      common.Color stroke,
-      double strokeWidthPx}) {
+      {Canvas? canvas,
+      Paint? paint,
+      required List<Point> points,
+      Rectangle<num>? clipBounds,
+      common.Color? fill,
+      common.Color? stroke,
+      double? strokeWidthPx}) {
     if (points.isEmpty) {
       return;
     }
@@ -45,7 +45,7 @@ class PolygonPainter {
     // Apply clip bounds as a clip region.
     if (clipBounds != null) {
       canvas
-        ..save()
+        ?..save()
         ..clipRect(new Rect.fromLTWH(
             clipBounds.left.toDouble(),
             clipBounds.top.toDouble(),
@@ -54,28 +54,29 @@ class PolygonPainter {
     }
 
     final strokeColor = stroke != null
-        ? new Color.fromARGB(stroke.a, stroke.r, stroke.g, stroke.b)
+        ? new Color.fromARGB(stroke.a, stroke.r!, stroke.g!, stroke.b!)
         : null;
 
     final fillColor = fill != null
-        ? new Color.fromARGB(fill.a, fill.r, fill.g, fill.b)
+        ? new Color.fromARGB(fill.a, fill.r!, fill.g!, fill.b!)
         : null;
 
     // If the line has a single point, draw a circle.
     if (points.length == 1) {
       final point = points.first;
-      paint.color = fillColor;
+      paint!.color = fillColor!;
       paint.style = PaintingStyle.fill;
-      canvas.drawCircle(new Offset(point.x, point.y), strokeWidthPx, paint);
+      canvas!.drawCircle(new Offset(point.x as double, point.y as double),
+          strokeWidthPx!, paint);
     } else {
       if (strokeColor != null && strokeWidthPx != null) {
-        paint.strokeWidth = strokeWidthPx;
+        paint!.strokeWidth = strokeWidthPx;
         paint.strokeJoin = StrokeJoin.bevel;
         paint.style = PaintingStyle.stroke;
       }
 
       if (fillColor != null) {
-        paint.color = fillColor;
+        paint!.color = fillColor;
         paint.style = PaintingStyle.fill;
       }
 
@@ -86,7 +87,7 @@ class PolygonPainter {
         path.lineTo(point.x.toDouble(), point.y.toDouble());
       }
 
-      canvas.drawPath(path, paint);
+      canvas!.drawPath(path, paint!);
     }
 
     if (clipBounds != null) {

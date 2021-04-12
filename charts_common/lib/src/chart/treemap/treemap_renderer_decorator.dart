@@ -1,4 +1,4 @@
-// Copyright 2018 the Charts project authors. Please see the AUTHORS file
+// Copyright 2019 the Charts project authors. Please see the AUTHORS file
 // for details.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,8 +28,9 @@ abstract class TreeMapRendererDecorator<D> {
   /// Paints decorator on top of [rendererElement].
   void decorate(TreeMapRendererElement<D> rendererElement, ChartCanvas canvas,
       GraphicsFactory graphicsFactory,
-      {@required Rectangle drawBounds,
-      @required double animationPercent,
+      {required Rectangle drawBounds,
+      required double animationPercent,
       bool rtl = false,
-      bool renderVertically = false});
+      bool renderVertically = false,
+      bool renderMultiline = false});
 }

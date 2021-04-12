@@ -61,52 +61,53 @@ class MockDateTimeAxis extends Mock implements Axis<DateTime> {}
 class MockCanvas extends Mock implements ChartCanvas {}
 
 void main() {
-  final date0 = new DateTime(2018, 2, 1);
-  final date1 = new DateTime(2018, 2, 7);
-  final dateOutsideViewport = new DateTime(2018, 1, 1);
+  final date0 = DateTime(2018, 2, 1);
+  final date1 = DateTime(2018, 2, 7);
+  final dateOutsideViewport = DateTime(2018, 1, 1);
 
   /////////////////////////////////////////
   // Convenience methods for creating mocks.
   /////////////////////////////////////////
-  _configureBaseRenderer(BaseBarRenderer renderer, bool vertical) {
-    final context = new MockContext();
+  BaseBarRenderer _configureBaseRenderer(
+      BaseBarRenderer renderer, bool vertical) {
+    final context = MockContext();
     when(context.chartContainerIsRtl).thenReturn(false);
     when(context.isRtl).thenReturn(false);
-    final verticalChart = new MockChart();
+    final verticalChart = MockChart();
     when(verticalChart.vertical).thenReturn(vertical);
     when(verticalChart.context).thenReturn(context);
     renderer.onAttach(verticalChart);
 
     final layoutBounds = vertical
-        ? new Rectangle<int>(70, 20, 230, 100)
-        : new Rectangle<int>(70, 20, 100, 230);
+        ? Rectangle<int>(70, 20, 230, 100)
+        : Rectangle<int>(70, 20, 100, 230);
     renderer.layout(layoutBounds, layoutBounds);
     return renderer;
   }
 
-  BaseBarRenderer _makeBarRenderer({bool vertical, BarGroupingType groupType}) {
+  BaseBarRenderer _makeBarRenderer({required bool vertical, BarGroupingType? groupType}) {
     final renderer =
-        new BarRenderer(config: new BarRendererConfig(groupingType: groupType));
+        BarRenderer(config: BarRendererConfig(groupingType: groupType));
     _configureBaseRenderer(renderer, vertical);
     return renderer;
   }
 
   BaseBarRenderer _makeBarTargetRenderer(
-      {bool vertical, BarGroupingType groupType}) {
-    final renderer = new BarTargetLineRenderer(
-        config: new BarTargetLineRendererConfig(groupingType: groupType));
+      {required bool vertical, BarGroupingType? groupType}) {
+    final renderer = BarTargetLineRenderer(
+        config: BarTargetLineRendererConfig(groupingType: groupType));
     _configureBaseRenderer(renderer, vertical);
     return renderer;
   }
 
   MutableSeries _makeSeries(
-      {String id, String seriesCategory, bool vertical = true}) {
+      {String? id, String? seriesCategory, bool vertical = true}) {
     final data = <MyRow>[
-      new MyRow('camp0', 10),
-      new MyRow('camp1', 10),
+      MyRow('camp0', 10),
+      MyRow('camp1', 10),
     ];
 
-    final series = new MutableSeries<String>(new Series(
+    final series = MutableSeries<String?>(Series(
       id: id,
       data: data,
       domainFn: (dynamic row, _) => row.campaign,
@@ -115,10 +116,10 @@ void main() {
     ));
 
     series.measureOffsetFn = (_) => 0.0;
-    series.colorFn = (_) => new Color.fromHex(code: '#000000');
+    series.colorFn = (_) => Color.fromHex(code: '#000000');
 
     // Mock the Domain axis results.
-    final domainAxis = new MockOrdinalAxis();
+    final domainAxis = MockOrdinalAxis();
     when(domainAxis.rangeBand).thenReturn(100.0);
     final domainOffset = vertical ? 70.0 : 20.0;
     when(domainAxis.getLocation('camp0'))
@@ -140,7 +141,7 @@ void main() {
     series.setAttr(domainAxisKey, domainAxis);
 
     // Mock the Measure axis results.
-    final measureAxis = new MockNumericAxis();
+    final measureAxis = MockNumericAxis();
     if (vertical) {
       when(measureAxis.getLocation(0.0)).thenReturn(20.0 + 100.0);
       when(measureAxis.getLocation(10.0)).thenReturn(20.0 + 100.0 - 10.0);
@@ -156,13 +157,13 @@ void main() {
   }
 
   MutableSeries _makeDateTimeSeries(
-      {String id, String seriesCategory, bool vertical = true}) {
+      {String? id, String? seriesCategory, bool vertical = true}) {
     final data = <MyDateTimeRow>[
-      new MyDateTimeRow(date0, 10),
-      new MyDateTimeRow(date1, 10),
+      MyDateTimeRow(date0, 10),
+      MyDateTimeRow(date1, 10),
     ];
 
-    final series = new MutableSeries<DateTime>(new Series(
+    final series = MutableSeries<DateTime?>(Series(
       id: id,
       data: data,
       domainFn: (dynamic row, _) => row.time,
@@ -171,10 +172,10 @@ void main() {
     ));
 
     series.measureOffsetFn = (_) => 0.0;
-    series.colorFn = (_) => new Color.fromHex(code: '#000000');
+    series.colorFn = (_) => Color.fromHex(code: '#000000');
 
     // Mock the Domain axis results.
-    final domainAxis = new MockDateTimeAxis();
+    final domainAxis = MockDateTimeAxis();
     when(domainAxis.rangeBand).thenReturn(100.0);
     final domainOffset = vertical ? 70.0 : 20.0;
     when(domainAxis.getLocation(date0)).thenReturn(domainOffset + 10.0 + 50.0);
@@ -185,7 +186,7 @@ void main() {
     series.setAttr(domainAxisKey, domainAxis);
 
     // Mock the Measure axis results.
-    final measureAxis = new MockNumericAxis();
+    final measureAxis = MockNumericAxis();
     if (vertical) {
       when(measureAxis.getLocation(0.0)).thenReturn(20.0 + 100.0);
       when(measureAxis.getLocation(10.0)).thenReturn(20.0 + 100.0 - 10.0);
@@ -200,7 +201,7 @@ void main() {
     return series;
   }
 
-  bool selectNearestByDomain;
+  late bool selectNearestByDomain;
 
   setUp(() {
     selectNearestByDomain = true;
@@ -215,17 +216,17 @@ void main() {
       final renderer =
           _makeBarRenderer(vertical: true, groupType: BarGroupingType.grouped);
       final seriesList = <MutableSeries>[
-        _makeSeries(id: 'foo')..data.clear(),
+        _makeSeries(id: 'foo')..data!.clear(),
         _makeSeries(id: 'bar'),
       ];
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -234,8 +235,8 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('bar'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(31)); // 2 + 49 - 20
       expect(closest.measureDistance, equals(0));
     });
@@ -245,17 +246,17 @@ void main() {
       final renderer =
           _makeBarRenderer(vertical: true, groupType: BarGroupingType.grouped);
       final seriesList = <MutableSeries>[
-        _makeSeries(id: 'foo')..data.clear(),
-        _makeSeries(id: 'bar')..data.clear(),
+        _makeSeries(id: 'foo')..data!.clear(),
+        _makeSeries(id: 'bar')..data!.clear(),
       ];
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -274,11 +275,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -287,8 +288,8 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('bar'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(31)); // 2 + 49 - 20
       expect(closest.measureDistance, equals(0));
     });
@@ -304,11 +305,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -329,11 +330,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -342,7 +343,7 @@ void main() {
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
     });
@@ -358,11 +359,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -371,15 +372,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(31)); // 2 + 49 - 20
       expect(next.measureDistance, equals(0));
     });
@@ -395,11 +396,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -409,15 +410,15 @@ void main() {
       // For vertical stacked bars, the first series is at the top of the stack.
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('bar'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('foo'));
-      expect(next.datum, equals(seriesList[0].data[0]));
+      expect(next.series!.id, equals('foo'));
+      expect(next.datum, equals(seriesList[0].data![0]));
       expect(next.domainDistance, equals(0));
       expect(next.measureDistance, equals(5.0));
     });
@@ -435,11 +436,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -449,29 +450,29 @@ void main() {
       // For vertical stacked bars, the first series is at the top of the stack.
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('bar0'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar0'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final other1 = details[1];
       expect(other1.domain, equals('camp0'));
-      expect(other1.series.id, equals('foo0'));
-      expect(other1.datum, equals(seriesList[0].data[0]));
+      expect(other1.series!.id, equals('foo0'));
+      expect(other1.datum, equals(seriesList[0].data![0]));
       expect(other1.domainDistance, equals(0));
       expect(other1.measureDistance, equals(5));
 
       var other2 = details[2];
       expect(other2.domain, equals('camp0'));
-      expect(other2.series.id, equals('bar1'));
-      expect(other2.datum, equals(seriesList[3].data[0]));
+      expect(other2.series!.id, equals('bar1'));
+      expect(other2.datum, equals(seriesList[3].data![0]));
       expect(other2.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other2.measureDistance, equals(0));
 
       var other3 = details[3];
       expect(other3.domain, equals('camp0'));
-      expect(other3.series.id, equals('foo1'));
-      expect(other3.datum, equals(seriesList[2].data[0]));
+      expect(other3.series!.id, equals('foo1'));
+      expect(other3.datum, equals(seriesList[2].data![0]));
       expect(other3.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other3.measureDistance, equals(5));
     });
@@ -484,20 +485,18 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0),
-          selectNearestByDomain,
-          null);
+          Point<double>(70.0 + 10.0 + 13.0, 20.0), selectNearestByDomain, null);
 
       // Verify
       expect(details.length, equals(1));
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(90));
     });
@@ -513,11 +512,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 50.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 50.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -526,15 +525,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(1));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(1));
       expect(next.measureDistance, equals(0));
     });
@@ -544,19 +543,17 @@ void main() {
       final renderer =
           _makeBarRenderer(vertical: true, groupType: BarGroupingType.grouped);
       final seriesList = <MutableSeries>[
-        _makeSeries(id: 'foo')..data.add(new MyRow('outsideViewport', 20))
+        _makeSeries(id: 'foo')..data!.add(MyRow('outsideViewport', 20))
       ];
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       // Note: point is in the axis, over a bar outside of the viewport.
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(65.0, 20.0 + 100.0 - 5.0),
-          selectNearestByDomain,
-          null);
+          Point<double>(65.0, 20.0 + 100.0 - 5.0), selectNearestByDomain, null);
 
       // Verify
       expect(details.length, equals(0));
@@ -577,11 +574,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 13.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 13.0),
           selectNearestByDomain,
           null);
 
@@ -590,7 +587,7 @@ void main() {
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
     });
@@ -606,11 +603,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -619,15 +616,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(31)); // 2 + 49 - 20
       expect(next.measureDistance, equals(0));
     });
@@ -643,11 +640,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -656,15 +653,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(0));
       expect(next.measureDistance, equals(5.0));
     });
@@ -682,11 +679,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -695,29 +692,29 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo0'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo0'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final other1 = details[1];
       expect(other1.domain, equals('camp0'));
-      expect(other1.series.id, equals('bar0'));
-      expect(other1.datum, equals(seriesList[1].data[0]));
+      expect(other1.series!.id, equals('bar0'));
+      expect(other1.datum, equals(seriesList[1].data![0]));
       expect(other1.domainDistance, equals(0));
       expect(other1.measureDistance, equals(5));
 
       var other2 = details[2];
       expect(other2.domain, equals('camp0'));
-      expect(other2.series.id, equals('foo1'));
-      expect(other2.datum, equals(seriesList[2].data[0]));
+      expect(other2.series!.id, equals('foo1'));
+      expect(other2.datum, equals(seriesList[2].data![0]));
       expect(other2.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other2.measureDistance, equals(0));
 
       var other3 = details[3];
       expect(other3.domain, equals('camp0'));
-      expect(other3.series.id, equals('bar1'));
-      expect(other3.datum, equals(seriesList[3].data[0]));
+      expect(other3.series!.id, equals('bar1'));
+      expect(other3.datum, equals(seriesList[3].data![0]));
       expect(other3.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other3.measureDistance, equals(5));
     });
@@ -732,11 +729,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 100.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 100.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -745,7 +742,7 @@ void main() {
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(90));
     });
@@ -761,11 +758,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 50.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 50.0),
           selectNearestByDomain,
           null);
 
@@ -774,15 +771,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(1));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(1));
       expect(next.measureDistance, equals(0));
     });
@@ -800,20 +797,18 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0),
-          selectNearestByDomain,
-          null);
+          Point<double>(70.0 + 10.0 + 13.0, 20.0), selectNearestByDomain, null);
 
       // Verify
       expect(details.length, equals(1));
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(90));
     });
@@ -829,11 +824,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -842,15 +837,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(31)); // 2 + 49 - 20
       expect(next.measureDistance, equals(5));
     });
@@ -866,11 +861,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -880,15 +875,15 @@ void main() {
       // For vertical stacked bars, the first series is at the top of the stack.
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('bar'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('foo'));
-      expect(next.datum, equals(seriesList[0].data[0]));
+      expect(next.series!.id, equals('foo'));
+      expect(next.datum, equals(seriesList[0].data![0]));
       expect(next.domainDistance, equals(0));
       expect(next.measureDistance, equals(15.0));
     });
@@ -906,11 +901,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -920,29 +915,29 @@ void main() {
       // For vertical stacked bars, the first series is at the top of the stack.
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('bar0'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar0'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final other1 = details[1];
       expect(other1.domain, equals('camp0'));
-      expect(other1.series.id, equals('foo0'));
-      expect(other1.datum, equals(seriesList[0].data[0]));
+      expect(other1.series!.id, equals('foo0'));
+      expect(other1.datum, equals(seriesList[0].data![0]));
       expect(other1.domainDistance, equals(0));
       expect(other1.measureDistance, equals(15));
 
       var other2 = details[2];
       expect(other2.domain, equals('camp0'));
-      expect(other2.series.id, equals('bar1'));
-      expect(other2.datum, equals(seriesList[3].data[0]));
+      expect(other2.series!.id, equals('bar1'));
+      expect(other2.datum, equals(seriesList[3].data![0]));
       expect(other2.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other2.measureDistance, equals(5));
 
       var other3 = details[3];
       expect(other3.domain, equals('camp0'));
-      expect(other3.series.id, equals('foo1'));
-      expect(other3.datum, equals(seriesList[2].data[0]));
+      expect(other3.series!.id, equals('foo1'));
+      expect(other3.datum, equals(seriesList[2].data![0]));
       expect(other3.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other3.measureDistance, equals(15));
     });
@@ -958,11 +953,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 50.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 50.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -971,15 +966,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(1));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(1));
       expect(next.measureDistance, equals(5));
     });
@@ -989,19 +984,17 @@ void main() {
       final renderer = _makeBarTargetRenderer(
           vertical: true, groupType: BarGroupingType.grouped);
       final seriesList = <MutableSeries>[
-        _makeSeries(id: 'foo')..data.add(new MyRow('outsideViewport', 20))
+        _makeSeries(id: 'foo')..data!.add(MyRow('outsideViewport', 20))
       ];
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       // Note: point is in the axis, over a bar outside of the viewport.
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(65.0, 20.0 + 100.0 - 5.0),
-          selectNearestByDomain,
-          null);
+          Point<double>(65.0, 20.0 + 100.0 - 5.0), selectNearestByDomain, null);
 
       // Verify
       expect(details.length, equals(0));
@@ -1022,11 +1015,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 100.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 100.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -1035,7 +1028,7 @@ void main() {
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(90));
     });
@@ -1051,11 +1044,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -1064,15 +1057,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(31)); // 2 + 49 - 20
       expect(next.measureDistance, equals(5));
     });
@@ -1088,11 +1081,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -1101,15 +1094,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(0));
       expect(next.measureDistance, equals(15));
     });
@@ -1127,11 +1120,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 20.0),
           selectNearestByDomain,
           null);
 
@@ -1140,29 +1133,29 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo0'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo0'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final other1 = details[1];
       expect(other1.domain, equals('camp0'));
-      expect(other1.series.id, equals('bar0'));
-      expect(other1.datum, equals(seriesList[1].data[0]));
+      expect(other1.series!.id, equals('bar0'));
+      expect(other1.datum, equals(seriesList[1].data![0]));
       expect(other1.domainDistance, equals(0));
       expect(other1.measureDistance, equals(15));
 
       var other2 = details[2];
       expect(other2.domain, equals('camp0'));
-      expect(other2.series.id, equals('foo1'));
-      expect(other2.datum, equals(seriesList[2].data[0]));
+      expect(other2.series!.id, equals('foo1'));
+      expect(other2.datum, equals(seriesList[2].data![0]));
       expect(other2.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other2.measureDistance, equals(5));
 
       var other3 = details[3];
       expect(other3.domain, equals('camp0'));
-      expect(other3.series.id, equals('bar1'));
-      expect(other3.datum, equals(seriesList[3].data[0]));
+      expect(other3.series!.id, equals('bar1'));
+      expect(other3.datum, equals(seriesList[3].data![0]));
       expect(other3.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other3.measureDistance, equals(15));
     });
@@ -1178,11 +1171,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 5.0, 20.0 + 10.0 + 50.0),
+          Point<double>(70.0 + 5.0, 20.0 + 10.0 + 50.0),
           selectNearestByDomain,
           null);
 
@@ -1191,15 +1184,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals('camp0'));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(1));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals('camp0'));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(1));
       expect(next.measureDistance, equals(5));
     });
@@ -1217,11 +1210,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -1230,7 +1223,7 @@ void main() {
       final closest = details[0];
       expect(closest.domain, equals(date0));
       expect(closest.series, equals(seriesList[0]));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
     });
@@ -1246,11 +1239,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -1259,15 +1252,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals(date0));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(0));
 
       final next = details[1];
       expect(next.domain, equals(date0));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(31)); // 2 + 49 - 20
       expect(next.measureDistance, equals(0));
     });
@@ -1283,11 +1276,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 13.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -1297,15 +1290,15 @@ void main() {
       // For vertical stacked bars, the first series is at the top of the stack.
       final closest = details[0];
       expect(closest.domain, equals(date0));
-      expect(closest.series.id, equals('bar'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals(date0));
-      expect(next.series.id, equals('foo'));
-      expect(next.datum, equals(seriesList[0].data[0]));
+      expect(next.series!.id, equals('foo'));
+      expect(next.datum, equals(seriesList[0].data![0]));
       expect(next.domainDistance, equals(0));
       expect(next.measureDistance, equals(15.0));
     });
@@ -1323,11 +1316,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 20.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -1337,29 +1330,29 @@ void main() {
       // For vertical stacked bars, the first series is at the top of the stack.
       final closest = details[0];
       expect(closest.domain, equals(date0));
-      expect(closest.series.id, equals('bar0'));
-      expect(closest.datum, equals(seriesList[1].data[0]));
+      expect(closest.series!.id, equals('bar0'));
+      expect(closest.datum, equals(seriesList[1].data![0]));
       expect(closest.domainDistance, equals(0));
       expect(closest.measureDistance, equals(5));
 
       final other1 = details[1];
       expect(other1.domain, equals(date0));
-      expect(other1.series.id, equals('foo0'));
-      expect(other1.datum, equals(seriesList[0].data[0]));
+      expect(other1.series!.id, equals('foo0'));
+      expect(other1.datum, equals(seriesList[0].data![0]));
       expect(other1.domainDistance, equals(0));
       expect(other1.measureDistance, equals(15));
 
       var other2 = details[2];
       expect(other2.domain, equals(date0));
-      expect(other2.series.id, equals('bar1'));
-      expect(other2.datum, equals(seriesList[3].data[0]));
+      expect(other2.series!.id, equals('bar1'));
+      expect(other2.datum, equals(seriesList[3].data![0]));
       expect(other2.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other2.measureDistance, equals(5));
 
       var other3 = details[3];
       expect(other3.domain, equals(date0));
-      expect(other3.series.id, equals('foo1'));
-      expect(other3.datum, equals(seriesList[2].data[0]));
+      expect(other3.series!.id, equals('foo1'));
+      expect(other3.datum, equals(seriesList[2].data![0]));
       expect(other3.domainDistance, equals(31)); // 2 + 49 - 20
       expect(other3.measureDistance, equals(15));
     });
@@ -1375,11 +1368,11 @@ void main() {
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(70.0 + 10.0 + 50.0, 20.0 + 100.0 - 5.0),
+          Point<double>(70.0 + 10.0 + 50.0, 20.0 + 100.0 - 5.0),
           selectNearestByDomain,
           null);
 
@@ -1388,15 +1381,15 @@ void main() {
 
       final closest = details[0];
       expect(closest.domain, equals(date0));
-      expect(closest.series.id, equals('foo'));
-      expect(closest.datum, equals(seriesList[0].data[0]));
+      expect(closest.series!.id, equals('foo'));
+      expect(closest.datum, equals(seriesList[0].data![0]));
       expect(closest.domainDistance, equals(1));
       expect(closest.measureDistance, equals(5));
 
       final next = details[1];
       expect(next.domain, equals(date0));
-      expect(next.series.id, equals('bar'));
-      expect(next.datum, equals(seriesList[1].data[0]));
+      expect(next.series!.id, equals('bar'));
+      expect(next.datum, equals(seriesList[1].data![0]));
       expect(next.domainDistance, equals(1));
       expect(next.measureDistance, equals(5));
     });
@@ -1407,19 +1400,17 @@ void main() {
           vertical: true, groupType: BarGroupingType.grouped);
       final seriesList = <MutableSeries>[
         _makeDateTimeSeries(id: 'foo')
-          ..data.add(new MyDateTimeRow(dateOutsideViewport, 20))
+          ..data!.add(MyDateTimeRow(dateOutsideViewport, 20))
       ];
       renderer.configureSeries(seriesList);
       renderer.preprocessSeries(seriesList);
       renderer.update(seriesList, false);
-      renderer.paint(new MockCanvas(), 1.0);
+      renderer.paint(MockCanvas(), 1.0);
 
       // Act
       // Note: point is in the axis, over a bar outside of the viewport.
       final details = renderer.getNearestDatumDetailPerSeries(
-          new Point<double>(65.0, 20.0 + 100.0 - 5.0),
-          selectNearestByDomain,
-          null);
+          Point<double>(65.0, 20.0 + 100.0 - 5.0), selectNearestByDomain, null);
 
       // Verify
       expect(details.length, equals(0));

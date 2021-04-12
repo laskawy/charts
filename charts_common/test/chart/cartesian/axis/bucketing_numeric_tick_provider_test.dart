@@ -42,50 +42,50 @@ class MockNumericScale extends Mock implements NumericScale {}
 ///
 /// Reports alternate rendering after tick count is greater than or equal to
 /// [alternateRenderingAfterTickCount].
-class FakeDrawStrategy extends BaseTickDrawStrategy<num> {
+class FakeDrawStrategy extends BaseTickDrawStrategy<num?> {
   final int collidesAfterTickCount;
   final int alternateRenderingAfterTickCount;
 
   FakeDrawStrategy(
       this.collidesAfterTickCount, this.alternateRenderingAfterTickCount)
-      : super(null, new FakeGraphicsFactory());
+      : super(null, FakeGraphicsFactory());
 
   @override
-  CollisionReport collides(List<Tick<num>> ticks, _) {
-    final ticksCollide = ticks.length >= collidesAfterTickCount;
+  CollisionReport collides(List<Tick<num?>>? ticks, _) {
+    final ticksCollide = ticks!.length >= collidesAfterTickCount;
     final alternateTicksUsed = ticks.length >= alternateRenderingAfterTickCount;
 
-    return new CollisionReport(
+    return CollisionReport(
         ticksCollide: ticksCollide,
         ticks: ticks,
         alternateTicksUsed: alternateTicksUsed);
   }
 
   @override
-  void draw(ChartCanvas canvas, Tick<num> tick,
-      {AxisOrientation orientation,
-      Rectangle<int> axisBounds,
-      Rectangle<int> drawAreaBounds,
-      bool isFirst,
-      bool isLast}) {}
+  void draw(ChartCanvas canvas, Tick<num?> tick,
+      {AxisOrientation? orientation,
+      Rectangle<int>? axisBounds,
+      Rectangle<int>? drawAreaBounds,
+      bool? isFirst,
+      bool? isLast}) {}
 }
 
 /// A fake [GraphicsFactory] that returns [MockTextStyle] and [MockTextElement].
 class FakeGraphicsFactory extends GraphicsFactory {
   @override
-  TextStyle createTextPaint() => new MockTextStyle();
+  TextStyle createTextPaint() => MockTextStyle();
 
   @override
-  TextElement createTextElement(String text) => new MockTextElement(text);
+  TextElement createTextElement(String? text) => MockTextElement(text);
 
   @override
-  LineStyle createLinePaint() => new MockLinePaint();
+  LineStyle createLinePaint() => MockLinePaint();
 }
 
 class MockTextStyle extends Mock implements TextStyle {}
 
 class MockTextElement extends Mock implements TextElement {
-  String text;
+  String? text;
 
   MockTextElement(this.text);
 }
@@ -106,18 +106,18 @@ class CelsiusToFahrenheitConverter implements UnitConverter<num, num> {
 }
 
 void main() {
-  FakeGraphicsFactory graphicsFactory;
-  MockNumericScale scale;
-  BucketingNumericTickProvider tickProvider;
-  TickFormatter<num> formatter;
-  ChartContext context;
+  late FakeGraphicsFactory graphicsFactory;
+  late MockNumericScale scale;
+  late BucketingNumericTickProvider tickProvider;
+  late TickFormatter<num> formatter;
+  late ChartContext context;
 
   setUp(() {
-    graphicsFactory = new FakeGraphicsFactory();
-    scale = new MockNumericScale();
-    tickProvider = new BucketingNumericTickProvider();
-    formatter = new NumericTickFormatter();
-    context = new MockChartContext();
+    graphicsFactory = FakeGraphicsFactory();
+    scale = MockNumericScale();
+    tickProvider = BucketingNumericTickProvider();
+    formatter = NumericTickFormatter();
+    context = MockChartContext();
   });
 
   group('threshold', () {
@@ -128,8 +128,8 @@ void main() {
         ..showBucket = true
         ..setFixedTickCount(21)
         ..allowedSteps = [1.0, 2.5, 5.0];
-      final drawStrategy = new FakeDrawStrategy(10, 10);
-      when(scale.viewportDomain).thenReturn(new NumericExtents(0.1, 0.7));
+      final drawStrategy = FakeDrawStrategy(10, 10);
+      when(scale.viewportDomain).thenReturn(NumericExtents(0.1, 0.7));
       when(scale.rangeWidth).thenReturn(1000);
       when(scale[0.1]).thenReturn(90.0);
       when(scale[0]).thenReturn(100.0);
@@ -152,13 +152,13 @@ void main() {
       expect(ticks[0].labelOffsetPx, isNull);
       expect(ticks[0].locationPx, equals(100.0));
       expect(ticks[0].value, equals(0.0));
-      expect(ticks[0].textElement.text, equals(''));
+      expect(ticks[0].textElement!.text, equals(''));
 
       // Verify that we have a threshold tick.
       expect(ticks[1].labelOffsetPx, equals(5.0));
       expect(ticks[1].locationPx, equals(90.0));
       expect(ticks[1].value, equals(0.10));
-      expect(ticks[1].textElement.text, equals('< 0.1'));
+      expect(ticks[1].textElement!.text, equals('< 0.1'));
 
       // Verify that the rest of the ticks are all above the threshold in value
       // and have normal labels.
@@ -168,7 +168,7 @@ void main() {
 
       aboveThresholdTicks = ticks.sublist(2);
       aboveThresholdTicks.retainWhere((Tick tick) =>
-          tick.textElement.text != '' && !tick.textElement.text.contains('<'));
+          tick.textElement!.text != '' && !tick.textElement!.text!.contains('<'));
       expect(aboveThresholdTicks, hasLength(18));
 
       aboveThresholdTicks = ticks.sublist(2);

@@ -41,7 +41,7 @@ class NumericExtents implements Extents<num> {
         max = value;
       }
     }
-    return new NumericExtents(min, max);
+    return NumericExtents(min, max);
   }
 
   /// Returns the union of this and other.
@@ -50,13 +50,13 @@ class NumericExtents implements Extents<num> {
       if (max >= other.max) {
         return this;
       } else {
-        return new NumericExtents(min, other.max);
+        return NumericExtents(min, other.max);
       }
     } else {
       if (other.max >= max) {
         return other;
       } else {
-        return new NumericExtents(other.min, max);
+        return NumericExtents(other.min, max);
       }
     }
   }
@@ -80,10 +80,10 @@ class NumericExtents implements Extents<num> {
 
   // Returns true if these [NumericExtents] collides with [other].
   bool overlaps(NumericExtents other) {
-    return _containsValue(other.min) ||
-        _containsValue(other.max) ||
-        other._containsValue(min) ||
-        other._containsValue(max);
+    return _containsValue(other.min as double) ||
+        _containsValue(other.max as double) ||
+        other._containsValue(min as double) ||
+        other._containsValue(max as double);
   }
 
   @override
@@ -92,7 +92,7 @@ class NumericExtents implements Extents<num> {
   }
 
   @override
-  int get hashCode => (min.hashCode + (max.hashCode * 31));
+  int get hashCode => min.hashCode + (max.hashCode * 31);
 
   num get width => max - min;
 
@@ -100,6 +100,6 @@ class NumericExtents implements Extents<num> {
   String toString() => 'Extent($min, $max)';
 
   static const NumericExtents unbounded =
-      const NumericExtents(double.negativeInfinity, double.infinity);
-  static const NumericExtents empty = const NumericExtents(0.0, 0.0);
+      NumericExtents(double.negativeInfinity, double.infinity);
+  static const NumericExtents empty = NumericExtents(0.0, 0.0);
 }

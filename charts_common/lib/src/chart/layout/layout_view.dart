@@ -16,6 +16,8 @@
 import 'dart:math' show Rectangle;
 import 'package:meta/meta.dart';
 
+import '../common/behavior/chart_behavior.dart'
+    show BehaviorPosition, OutsideJustification;
 import '../../common/graphics_factory.dart' show GraphicsFactory;
 import '../common/chart_canvas.dart' show ChartCanvas;
 
@@ -81,15 +83,14 @@ class LayoutViewPositionOrder {
 /// A configuration for margin (empty space) around a layout child view.
 class ViewMargin {
   /// A [ViewMargin] with all zero px.
-  static const empty =
-      const ViewMargin(topPx: 0, bottomPx: 0, rightPx: 0, leftPx: 0);
+  static const empty = ViewMargin(topPx: 0, bottomPx: 0, rightPx: 0, leftPx: 0);
 
   final int topPx;
   final int bottomPx;
   final int rightPx;
   final int leftPx;
 
-  const ViewMargin({int topPx, int bottomPx, int rightPx, int leftPx})
+  const ViewMargin({int? topPx, int? bottomPx, int? rightPx, int? leftPx})
       : topPx = topPx ?? 0,
         bottomPx = bottomPx ?? 0,
         rightPx = rightPx ?? 0,
@@ -105,15 +106,15 @@ class ViewMargin {
 /// Configuration of a [LayoutView].
 class LayoutViewConfig {
   /// Unique identifier for the [LayoutView].
-  String id;
+  String? id;
 
   /// The order to paint a [LayoutView] on the canvas.
   ///
   /// The smaller number is drawn first.
-  int paintOrder;
+  int? paintOrder;
 
   /// The position of a [LayoutView] defining where to place the view.
-  LayoutPosition position;
+  LayoutPosition? position;
 
   /// The order to place the [LayoutView] within a chart margin.
   ///
@@ -134,10 +135,10 @@ class LayoutViewConfig {
   /// [position] the [ComponentPosition] of this component.
   /// [positionOrder] the order of this component in a chart margin.
   LayoutViewConfig(
-      {@required this.paintOrder,
-      @required this.position,
-      @required this.positionOrder,
-      ViewMargin viewMargin})
+      {this.paintOrder,
+      this.position,
+      required this.positionOrder,
+      ViewMargin? viewMargin})
       : viewMargin = viewMargin ?? ViewMargin.empty;
 
   /// Returns true if it is a full position.
@@ -153,11 +154,11 @@ class LayoutViewConfig {
 /// The measurement is tight to the component, without adding [ComponentBuffer].
 class ViewMeasuredSizes {
   /// All zeroes component size.
-  static const zero = const ViewMeasuredSizes(
+  static const zero = ViewMeasuredSizes(
       preferredWidth: 0, preferredHeight: 0, minWidth: 0, minHeight: 0);
 
-  final int preferredWidth;
-  final int preferredHeight;
+  final int? preferredWidth;
+  final int? preferredHeight;
   final int minWidth;
   final int minHeight;
 
@@ -168,37 +169,37 @@ class ViewMeasuredSizes {
   /// [minWidth] the component's minimum width. If not set, default to 0.
   /// [minHeight] the component's minimum height. If not set, default to 0.
   const ViewMeasuredSizes(
-      {@required this.preferredWidth,
-      @required this.preferredHeight,
-      int minWidth,
-      int minHeight})
+      {required this.preferredWidth,
+      required this.preferredHeight,
+      int? minWidth,
+      int? minHeight})
       : minWidth = minWidth ?? 0,
         minHeight = minHeight ?? 0;
 }
 
 /// A component that measures its size and accepts bounds to complete layout.
 abstract class LayoutView {
-  GraphicsFactory get graphicsFactory;
+  GraphicsFactory? get graphicsFactory;
 
-  set graphicsFactory(GraphicsFactory value);
+  set graphicsFactory(GraphicsFactory? value);
 
   /// Layout params for this component.
-  LayoutViewConfig get layoutConfig;
+  LayoutViewConfig? get layoutConfig;
 
   /// Measure and return the size of this component.
   ///
   /// This measurement is without the [ComponentBuffer], which is added by the
   /// layout manager.
-  ViewMeasuredSizes measure(int maxWidth, int maxHeight);
+  ViewMeasuredSizes? measure(int? maxWidth, int? maxHeight);
 
   /// Layout this component.
-  void layout(Rectangle<int> componentBounds, Rectangle<int> drawAreaBounds);
+  void layout(Rectangle<int>? componentBounds, Rectangle<int>? drawAreaBounds);
 
   /// Draw this component on the canvas.
-  void paint(ChartCanvas canvas, double animationPercent);
+  void paint(ChartCanvas canvas, double? animationPercent);
 
   /// Bounding box for drawing this component.
-  Rectangle<int> get componentBounds;
+  Rectangle<int>? get componentBounds;
 
   /// Whether or not this component is a series renderer that draws series
   /// data.
@@ -206,4 +207,57 @@ abstract class LayoutView {
   /// This component may either render into the chart's draw area, or into a
   /// separate area bounded by the component bounds.
   bool get isSeriesRenderer;
+}
+
+/// Translates a component's [BehaviorPosition] and [OutsideJustification] into
+/// a [LayoutPosition] that a [LayoutManager] can use to place components on the
+/// chart.
+LayoutPosition? layoutPosition(BehaviorPosition? behaviorPosition,
+    OutsideJustification? outsideJustification, bool isRtl) {
+  LayoutPosition? position;
+  switch (behaviorPosition) {
+    case BehaviorPosition.bottom:
+      position = LayoutPosition.Bottom;
+      break;
+    case BehaviorPosition.end:
+      position = isRtl ? LayoutPosition.Left : LayoutPosition.Right;
+      break;
+    case BehaviorPosition.inside:
+      position = LayoutPosition.DrawArea;
+      break;
+    case BehaviorPosition.start:
+      position = isRtl ? LayoutPosition.Right : LayoutPosition.Left;
+      break;
+    case BehaviorPosition.top:
+      position = LayoutPosition.Top;
+      break;
+    case null:
+  }
+
+  // If we have a "full" [OutsideJustification], convert the layout position
+  // to the "full" form.
+  if (outsideJustification == OutsideJustification.start ||
+      outsideJustification == OutsideJustification.middle ||
+      outsideJustification == OutsideJustification.end) {
+    switch (position) {
+      case LayoutPosition.Bottom:
+        position = LayoutPosition.FullBottom;
+        break;
+      case LayoutPosition.Left:
+        position = LayoutPosition.FullLeft;
+        break;
+      case LayoutPosition.Top:
+        position = LayoutPosition.FullTop;
+        break;
+      case LayoutPosition.Right:
+        position = LayoutPosition.FullRight;
+        break;
+
+      // Ignore other positions, like DrawArea.
+      default:
+        break;
+    }
+  }
+
+  return position;
 }

@@ -31,13 +31,13 @@ import '../series_datum.dart' show SeriesDatum, SeriesDatumConfig;
 /// for each datum for a given domain/time, but highlights the closest entry to
 /// match up with highlighting/bolding of the line and legend.
 class SelectionModel<D> {
-  var _selectedDatum = <SeriesDatum<D>>[];
-  var _selectedSeries = <ImmutableSeries<D>>[];
+  List<SeriesDatum<D>>? _selectedDatum = <SeriesDatum<D>>[];
+  List<ImmutableSeries<D>?> _selectedSeries = <ImmutableSeries<D>>[];
 
   /// Create selection model with the desired selection.
   SelectionModel(
-      {List<SeriesDatum<D>> selectedData,
-      List<ImmutableSeries<D>> selectedSeries}) {
+      {List<SeriesDatum<D>>? selectedData,
+      List<ImmutableSeries<D>>? selectedSeries}) {
     if (selectedData != null) {
       _selectedDatum = selectedData;
     }
@@ -48,19 +48,19 @@ class SelectionModel<D> {
 
   /// Create a deep copy of the selection model.
   SelectionModel.fromOther(SelectionModel<D> other) {
-    _selectedDatum = new List.from(other._selectedDatum);
-    _selectedSeries = new List.from(other._selectedSeries);
+    _selectedDatum = List.from(other._selectedDatum!);
+    _selectedSeries = List.from(other._selectedSeries);
   }
 
   /// Create selection model from configuration.
-  SelectionModel.fromConfig(List<SeriesDatumConfig> selectedDataConfig,
-      List<String> selectedSeriesConfig, List<ImmutableSeries<D>> seriesList) {
+  SelectionModel.fromConfig(List<SeriesDatumConfig>? selectedDataConfig,
+      List<String>? selectedSeriesConfig, List<ImmutableSeries<D>> seriesList) {
     final selectedDataMap = <String, List<D>>{};
 
     if (selectedDataConfig != null) {
       for (SeriesDatumConfig config in selectedDataConfig) {
         selectedDataMap[config.seriesId] ??= <D>[];
-        selectedDataMap[config.seriesId].add(config.domainValue);
+        selectedDataMap[config.seriesId]!.add(config.domainValue);
       }
 
       // Add to list of selected series.
@@ -70,13 +70,13 @@ class SelectionModel<D> {
       // Add to list of selected data.
       for (ImmutableSeries<D> series in seriesList) {
         if (selectedDataMap.containsKey(series.id)) {
-          final domainFn = series.domainFn;
+          final D Function(int)? domainFn = series.domainFn;
 
-          for (var i = 0; i < series.data.length; i++) {
-            final datum = series.data[i];
+          for (var i = 0; i < series.data!.length; i++) {
+            final datum = series.data![i];
 
-            if (selectedDataMap[series.id].contains(domainFn(i))) {
-              _selectedDatum.add(new SeriesDatum(series, datum));
+            if (selectedDataMap[series.id!]!.contains(domainFn!(i))) {
+              _selectedDatum!.add(SeriesDatum(series, datum));
             }
           }
         }
@@ -95,18 +95,17 @@ class SelectionModel<D> {
   }
 
   /// Returns true if this [SelectionModel] has a selected datum.
-  bool get hasDatumSelection => _selectedDatum.isNotEmpty;
+  bool get hasDatumSelection => _selectedDatum!.isNotEmpty;
 
-  bool isDatumSelected(ImmutableSeries<D> series, int index) {
-    final datum = index == null ? null : series.data[index];
-    return _selectedDatum.contains(new SeriesDatum(series, datum));
+  bool isDatumSelected(ImmutableSeries<D> series, int? index) {
+    final datum = index == null ? null : series.data![index];
+    return _selectedDatum!.contains(SeriesDatum(series, datum));
   }
 
   /// Returns the selected [SeriesDatum] for this [SelectionModel].
   ///
   /// This is empty by default.
-  List<SeriesDatum<D>> get selectedDatum =>
-      new List.unmodifiable(_selectedDatum);
+  List<SeriesDatum<D>> get selectedDatum => List.unmodifiable(_selectedDatum!);
 
   /// Returns true if this [SelectionModel] has a selected series.
   bool get hasSeriesSelection => _selectedSeries.isNotEmpty;
@@ -115,23 +114,23 @@ class SelectionModel<D> {
   ///
   /// This is empty by default.
   List<ImmutableSeries<D>> get selectedSeries =>
-      new List.unmodifiable(_selectedSeries);
+      List.unmodifiable(_selectedSeries);
 
   /// Returns true if this [SelectionModel] has a selected datum or series.
   bool get hasAnySelection =>
-      _selectedDatum.isNotEmpty || selectedSeries.isNotEmpty;
+      _selectedDatum!.isNotEmpty || selectedSeries.isNotEmpty;
 
   @override
   bool operator ==(Object other) {
     return other is SelectionModel &&
-        new ListEquality().equals(_selectedDatum, other.selectedDatum) &&
-        new ListEquality().equals(_selectedSeries, other.selectedSeries);
+        ListEquality().equals(_selectedDatum, other.selectedDatum) &&
+        ListEquality().equals(_selectedSeries, other.selectedSeries);
   }
 
   @override
   int get hashCode {
-    int hashcode = new ListEquality().hash(_selectedDatum);
-    hashcode = hashcode * 37 + new ListEquality().hash(_selectedSeries);
+    int hashcode = ListEquality().hash(_selectedDatum);
+    hashcode = hashcode * 37 + ListEquality().hash(_selectedSeries);
     return hashcode;
   }
 }
@@ -143,9 +142,18 @@ class SelectionModel<D> {
 class MutableSelectionModel<D> extends SelectionModel<D> {
   final _changedListeners = <SelectionModelListener<D>>[];
   final _updatedListeners = <SelectionModelListener<D>>[];
+  final _lockChangedListeners = <SelectionModelListener<D>>[];
+
+  bool _locked = false;
 
   /// When set to true, prevents the model from being updated.
-  bool locked = false;
+  set locked(bool locked) {
+    _locked = locked;
+    _lockChangedListeners
+        .forEach((listener) => listener(SelectionModel.fromOther(this)));
+  }
+
+  bool get locked => _locked;
 
   /// Clears the selection state.
   bool clearSelection({bool notifyListeners = true}) {
@@ -155,25 +163,22 @@ class MutableSelectionModel<D> extends SelectionModel<D> {
   /// Updates the selection state. If mouse driven, [datumSelection] should be
   /// ordered by distance from mouse, closest first.
   bool updateSelection(
-      List<SeriesDatum<D>> datumSelection, List<ImmutableSeries<D>> seriesList,
+      List<SeriesDatum<D>>? datumSelection, List<ImmutableSeries<D>?> seriesList,
       {bool notifyListeners = true}) {
-    if (locked) {
-      return false;
-    }
+    if (_locked) return false;
 
-    final origSelectedDatum = _selectedDatum;
-    final origSelectedSeries = _selectedSeries;
+    final List<SeriesDatum<D>>? origSelectedDatum = _selectedDatum;
+    final List<ImmutableSeries<D>?> origSelectedSeries = _selectedSeries;
 
     _selectedDatum = datumSelection;
     _selectedSeries = seriesList;
 
     // Provide a copy, so listeners get an immutable model.
-    final copyOfSelectionModel = new SelectionModel.fromOther(this);
+    final copyOfSelectionModel = SelectionModel.fromOther(this);
     _updatedListeners.forEach((listener) => listener(copyOfSelectionModel));
 
-    final changed =
-        !new ListEquality().equals(origSelectedDatum, _selectedDatum) ||
-            !new ListEquality().equals(origSelectedSeries, _selectedSeries);
+    final changed = !ListEquality().equals(origSelectedDatum, _selectedDatum) ||
+        !ListEquality().equals(origSelectedSeries, _selectedSeries);
     if (notifyListeners && changed) {
       _changedListeners.forEach((listener) => listener(copyOfSelectionModel));
     }
@@ -211,16 +216,27 @@ class MutableSelectionModel<D> extends SelectionModel<D> {
     _updatedListeners.remove(listener);
   }
 
+  /// Add a listener to be notified when this [SelectionModel] is locked.
+  void addSelectionLockChangedListener(SelectionModelListener<D> listener) {
+    _lockChangedListeners.add(listener);
+  }
+
+  /// Remove listener from being notified when this [SelectionModel]  is locked.
+  void removeSelectionLockChangedListener(SelectionModelListener<D> listener) {
+    _lockChangedListeners.remove(listener);
+  }
+
   /// Remove all listeners.
   void clearAllListeners() {
     _changedListeners.clear();
     _updatedListeners.clear();
+    _lockChangedListeners.clear();
   }
 }
 
 /// Callback for SelectionModel. It is triggered when the selection state
 /// changes.
-typedef SelectionModelListener<D>(SelectionModel<D> model);
+typedef SelectionModelListener<D> = void Function(SelectionModel<D> model);
 
 enum SelectionModelType {
   /// Typical Hover or Details event for viewing the details of the selected

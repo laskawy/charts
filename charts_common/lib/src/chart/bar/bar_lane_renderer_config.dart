@@ -25,7 +25,7 @@ import 'bar_renderer_decorator.dart' show BarRendererDecorator;
 import 'base_bar_renderer_config.dart' show BarGroupingType;
 
 /// Configuration for a bar lane renderer.
-class BarLaneRendererConfig extends BarRendererConfig<String> {
+class BarLaneRendererConfig extends BarRendererConfig<String?> {
   /// The color of background bars.
   final Color backgroundBarColor;
 
@@ -43,20 +43,20 @@ class BarLaneRendererConfig extends BarRendererConfig<String> {
   final bool mergeEmptyLanes;
 
   BarLaneRendererConfig({
-    String customRendererId,
-    CornerStrategy cornerStrategy,
+    String? customRendererId,
+    CornerStrategy? cornerStrategy,
     this.emptyLaneLabel = 'No data',
-    FillPatternType fillPattern,
-    BarGroupingType groupingType,
+    FillPatternType? fillPattern,
+    BarGroupingType? groupingType,
     int layoutPaintOrder = LayoutViewPaintOrder.bar,
     this.mergeEmptyLanes = false,
     int minBarLengthPx = 0,
-    double stackHorizontalSeparator,
+    int stackedBarPaddingPx = 1,
     double strokeWidthPx = 0.0,
-    BarRendererDecorator barRendererDecorator,
-    SymbolRenderer symbolRenderer,
-    Color backgroundBarColor,
-    List<int> weightPattern,
+    BarRendererDecorator? barRendererDecorator,
+    SymbolRenderer? symbolRenderer,
+    Color? backgroundBarColor,
+    List<int>? weightPattern,
   })  : backgroundBarColor =
             backgroundBarColor ?? StyleFactory.style.noDataColor,
         super(
@@ -67,7 +67,7 @@ class BarLaneRendererConfig extends BarRendererConfig<String> {
           layoutPaintOrder: layoutPaintOrder,
           minBarLengthPx: minBarLengthPx,
           fillPattern: fillPattern,
-          stackHorizontalSeparator: stackHorizontalSeparator,
+          stackedBarPaddingPx: stackedBarPaddingPx,
           strokeWidthPx: strokeWidthPx,
           symbolRenderer: symbolRenderer,
           weightPattern: weightPattern,
@@ -75,8 +75,7 @@ class BarLaneRendererConfig extends BarRendererConfig<String> {
 
   @override
   BarLaneRenderer<String> build() {
-    return new BarLaneRenderer<String>(
-        config: this, rendererId: customRendererId);
+    return BarLaneRenderer<String>(config: this, rendererId: customRendererId);
   }
 
   @override
@@ -90,15 +89,15 @@ class BarLaneRendererConfig extends BarRendererConfig<String> {
     return other.backgroundBarColor == backgroundBarColor &&
         other.emptyLaneLabel == emptyLaneLabel &&
         other.mergeEmptyLanes == mergeEmptyLanes &&
-        super == (other);
+        super == other;
   }
 
   @override
   int get hashCode {
     var hash = super.hashCode;
-    hash = hash * 31 + (backgroundBarColor?.hashCode ?? 0);
-    hash = hash * 31 + (emptyLaneLabel?.hashCode ?? 0);
-    hash = hash * 31 + (mergeEmptyLanes?.hashCode ?? 0);
+    hash = hash * 31 + (backgroundBarColor.hashCode);
+    hash = hash * 31 + (emptyLaneLabel.hashCode);
+    hash = hash * 31 + (mergeEmptyLanes.hashCode);
     return hash;
   }
 }

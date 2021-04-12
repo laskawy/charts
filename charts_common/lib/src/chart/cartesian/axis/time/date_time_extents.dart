@@ -21,7 +21,7 @@ class DateTimeExtents extends Extents<DateTime> {
   final DateTime start;
   final DateTime end;
 
-  DateTimeExtents({@required this.start, @required this.end});
+  DateTimeExtents({required this.start, required this.end});
 
   @override
   bool operator ==(other) {
@@ -29,5 +29,5 @@ class DateTimeExtents extends Extents<DateTime> {
   }
 
   @override
-  int get hashCode => (start.hashCode + (end.hashCode * 37));
+  int get hashCode => start.hashCode + (end.hashCode * 37);
 }

@@ -54,29 +54,29 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
   /// where these assumptions are not correct, please create a custom
   /// [TickFormatter].
   factory DateTimeTickFormatter(DateTimeFactory dateTimeFactory,
-      {Map<int, TimeTickFormatter> overrides}) {
+      {Map<int, TimeTickFormatter>? overrides}) {
     final Map<int, TimeTickFormatter> map = {
-      MINUTE: new TimeTickFormatterImpl(
+      MINUTE: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'mm',
           transitionFormat: 'h mm',
           transitionField: CalendarField.hourOfDay),
-      HOUR: new HourTickFormatter(
+      HOUR: HourTickFormatter(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'h',
           transitionFormat: 'MMM d ha',
           noonFormat: 'ha'),
-      23 * HOUR: new TimeTickFormatterImpl(
+      23 * HOUR: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'd',
           transitionFormat: 'MMM d',
           transitionField: CalendarField.month),
-      28 * DAY: new TimeTickFormatterImpl(
+      28 * DAY: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'MMM',
           transitionFormat: 'MMM yyyy',
           transitionField: CalendarField.year),
-      364 * DAY: new TimeTickFormatterImpl(
+      364 * DAY: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'yyyy',
           transitionFormat: 'yyyy',
@@ -88,23 +88,23 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
       map.addAll(overrides);
     }
 
-    return new DateTimeTickFormatter._internal(map);
+    return DateTimeTickFormatter._internal(map);
   }
 
   /// Creates a [DateTimeTickFormatter] without the time component.
   factory DateTimeTickFormatter.withoutTime(DateTimeFactory dateTimeFactory) {
-    return new DateTimeTickFormatter._internal({
-      23 * HOUR: new TimeTickFormatterImpl(
+    return DateTimeTickFormatter._internal({
+      23 * HOUR: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'd',
           transitionFormat: 'MMM d',
           transitionField: CalendarField.month),
-      28 * DAY: new TimeTickFormatterImpl(
+      28 * DAY: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'MMM',
           transitionFormat: 'MMM yyyy',
           transitionField: CalendarField.year),
-      365 * DAY: new TimeTickFormatterImpl(
+      365 * DAY: TimeTickFormatterImpl(
           dateTimeFactory: dateTimeFactory,
           simpleFormat: 'yyyy',
           transitionFormat: 'yyyy',
@@ -119,20 +119,20 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
   ///
   /// [formatter] The format for all ticks.
   factory DateTimeTickFormatter.uniform(TimeTickFormatter formatter) {
-    return new DateTimeTickFormatter._internal({ANY: formatter});
+    return DateTimeTickFormatter._internal({ANY: formatter});
   }
 
   /// Creates a [DateTimeTickFormatter] that formats ticks with [formatters].
   ///
   /// The formatters are expected to be provided with keys in increasing order.
   factory DateTimeTickFormatter.withFormatters(
-      Map<int, TimeTickFormatter> formatters) {
+      Map<int, TimeTickFormatter>? formatters) {
     // Formatters must be non empty.
     if (formatters == null || formatters.isEmpty) {
-      throw new ArgumentError('At least one TimeTickFormatter is required.');
+      throw ArgumentError('At least one TimeTickFormatter is required.');
     }
 
-    return new DateTimeTickFormatter._internal(formatters);
+    return DateTimeTickFormatter._internal(formatters);
   }
 
   DateTimeTickFormatter._internal(this._timeFormatters) {
@@ -144,8 +144,8 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
   }
 
   @override
-  List<String> format(List<DateTime> tickValues, Map<DateTime, String> cache,
-      {@required num stepSize}) {
+  List<String> format(List<DateTime> tickValues, Map<DateTime, String>? cache,
+      {num? stepSize}) {
     final tickLabels = <String>[];
     if (tickValues.isEmpty) {
       return tickLabels;
@@ -159,7 +159,7 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
     if (_timeFormatters.keys.first == ANY) {
       formatterFound = true;
     } else {
-      int minTimeBetweenTicks = stepSize.toInt();
+      int minTimeBetweenTicks = stepSize!.toInt();
 
       // TODO: Skip the formatter if the formatter's step size is
       // smaller than the minimum step size of the data.
@@ -179,7 +179,7 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
 
     var tickValue = (tickValuesIt..moveNext()).current;
     var prevTickValue = tickValue;
-    tickLabels.add(formatter.formatFirstTick(tickValue));
+    tickLabels.add(formatter!.formatFirstTick(tickValue));
 
     while (tickValuesIt.moveNext()) {
       tickValue = tickValuesIt.current;
@@ -202,7 +202,7 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
     // Only need to check the first value, because the values after are expected
     // to be greater.
     if (prev <= 0) {
-      throw new ArgumentError('Formatter keys must be positive');
+      throw ArgumentError('Formatter keys must be positive');
     }
 
     while (valuesIterator.moveNext() && isSorted) {
@@ -211,7 +211,7 @@ class DateTimeTickFormatter implements TickFormatter<DateTime> {
     }
 
     if (!isSorted) {
-      throw new ArgumentError(
+      throw ArgumentError(
           'Formatters must be sorted with keys in increasing order');
     }
   }

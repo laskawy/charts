@@ -50,17 +50,20 @@ import 'symbol_annotation_renderer_config.dart'
 /// Does not handle horizontal bars.
 class SymbolAnnotationRenderer<D> extends PointRenderer<D>
     implements LayoutView {
-  Rectangle<int> _componentBounds;
-  GraphicsFactory _graphicsFactory;
+  Rectangle<int>? _componentBounds;
 
-  CartesianChart<D> _chart;
+  @override
+  GraphicsFactory? graphicsFactory;
+
+  late CartesianChart<D> _chart;
 
   var _currentHeight = 0;
 
-  final _seriesInfo = new LinkedHashMap<String, _SeriesInfo<D>>();
+  // ignore: prefer_collection_literals, https://github.com/dart-lang/linter/issues/1649
+  final _seriesInfo = LinkedHashMap<String?, _SeriesInfo<D>>();
 
   SymbolAnnotationRenderer(
-      {String rendererId, SymbolAnnotationRendererConfig config})
+      {String? rendererId, SymbolAnnotationRendererConfig? config})
       : super(rendererId: rendererId ?? 'symbolAnnotation', config: config);
 
   //
@@ -69,30 +72,30 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
   /// Symbol annotations do not use any measure axes, or draw anything in the
   /// main draw area associated with them.
   @override
-  void configureMeasureAxes(List<MutableSeries<D>> seriesList) {}
+  void configureMeasureAxes(List<MutableSeries<D?>> seriesList) {}
 
   @override
-  void preprocessSeries(List<MutableSeries<D>> seriesList) {
-    var localConfig = (config as SymbolAnnotationRendererConfig);
+  void preprocessSeries(List<MutableSeries<D?>> seriesList) {
+    var localConfig = config as SymbolAnnotationRendererConfig;
 
     _seriesInfo.clear();
 
     double offset = 0.0;
 
-    seriesList.forEach((MutableSeries<D> series) {
+    seriesList.forEach((MutableSeries<D?> series) {
       final seriesKey = series.id;
 
       // Default to the configured radius if none was defined by the series.
       series.radiusPxFn ??= (_) => config.radiusPx;
 
       var maxRadius = 0.0;
-      for (var index = 0; index < series.data.length; index++) {
+      for (var index = 0; index < series.data!.length; index++) {
         // Default to the configured radius if none was returned by the
         // accessor function.
-        var radiusPx = series.radiusPxFn(index);
+        var radiusPx = series.radiusPxFn!(index);
         radiusPx ??= config.radiusPx;
 
-        maxRadius = max(maxRadius, radiusPx);
+        maxRadius = max(maxRadius, radiusPx as double);
       }
 
       final rowInnerHeight = maxRadius * 2;
@@ -105,19 +108,19 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
           localConfig.verticalSymbolTopPaddingPx +
           (rowInnerHeight / 2);
 
-      series.measureFn = (int index) => 0;
-      series.measureOffsetFn = (int index) => 0;
+      series.measureFn = (int? index) => 0;
+      series.measureOffsetFn = (int? index) => 0;
 
       // Override the key function to allow for range annotations that start at
       // the same point. This is a necessary hack because every annotation has a
       // measure value of 0, so the key generated in [PointRenderer] is not
       // unique enough.
       series.keyFn ??=
-          (int index) => '${series.id}__${series.domainFn(index)}__'
-              '${series.domainLowerBoundFn(index)}__'
-              '${series.domainUpperBoundFn(index)}';
+          (int? index) => '${series.id}__${series.domainFn!(index)}__'
+              '${series.domainLowerBoundFn!(index)}__'
+              '${series.domainUpperBoundFn!(index)}';
 
-      _seriesInfo[seriesKey] = new _SeriesInfo<D>(
+      _seriesInfo[seriesKey] = _SeriesInfo<D>(
         rowHeight: rowHeight,
         rowStart: offset,
         symbolCenter: symbolCenter,
@@ -132,19 +135,19 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
   }
 
   @override
-  DatumPoint<D> getPoint(
+  DatumPoint<D?> getPoint(
       final datum,
-      D domainValue,
-      D domainLowerBoundValue,
-      D domainUpperBoundValue,
-      ImmutableSeries<D> series,
-      ImmutableAxis<D> domainAxis,
-      num measureValue,
-      num measureLowerBoundValue,
-      num measureUpperBoundValue,
-      num measureOffsetValue,
-      ImmutableAxis<num> measureAxis) {
-    final domainPosition = domainAxis.getLocation(domainValue);
+      D? domainValue,
+      D? domainLowerBoundValue,
+      D? domainUpperBoundValue,
+      ImmutableSeries<D?> series,
+      ImmutableAxis<D?> domainAxis,
+      num? measureValue,
+      num? measureLowerBoundValue,
+      num? measureUpperBoundValue,
+      num? measureOffsetValue,
+      ImmutableAxis<num>? measureAxis) {
+    final domainPosition = domainAxis.getLocation(domainValue)!;
 
     final domainLowerBoundPosition = domainLowerBoundValue != null
         ? domainAxis.getLocation(domainLowerBoundValue)
@@ -155,9 +158,9 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
         : null;
 
     final seriesKey = series.id;
-    final seriesInfo = _seriesInfo[seriesKey];
+    final seriesInfo = _seriesInfo[seriesKey]!;
 
-    final measurePosition = _componentBounds.top + seriesInfo.symbolCenter;
+    final measurePosition = _componentBounds!.top + seriesInfo.symbolCenter;
 
     final measureLowerBoundPosition =
         domainLowerBoundPosition != null ? measurePosition : null;
@@ -165,7 +168,7 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
     final measureUpperBoundPosition =
         domainUpperBoundPosition != null ? measurePosition : null;
 
-    return new DatumPoint<D>(
+    return DatumPoint<D?>(
         datum: datum,
         domain: domainValue,
         series: series,
@@ -178,13 +181,13 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
   }
 
   @override
-  void onAttach(BaseChart<D> chart) {
+  void onAttach(BaseChart<D?> chart) {
     if (!(chart is CartesianChart)) {
-      throw new ArgumentError(
+      throw ArgumentError(
           'SymbolAnnotationRenderer can only be attached to a CartesianChart');
     }
 
-    _chart = chart as CartesianChart;
+    _chart = (chart as CartesianChart) as CartesianChart<D>;
 
     // Only vertical rendering is supported by this behavior.
     assert(_chart.vertical);
@@ -199,32 +202,24 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
   }
 
   @override
-  void paint(ChartCanvas canvas, double animationPercent) {
+  void paint(ChartCanvas canvas, double? animationPercent) {
     super.paint(canvas, animationPercent);
 
     // Use the domain axis of the attached chart to render the separator lines
     // to keep the same overall style.
     if ((config as SymbolAnnotationRendererConfig).showSeparatorLines) {
-      seriesPointMap.forEach((String key, List<AnimatedPoint<D>> points) {
-        final seriesInfo = _seriesInfo[key];
+      seriesPointMap.forEach((String? key, List<AnimatedPoint<D>>? points) {
+        final seriesInfo = _seriesInfo[key]!;
 
-        final y = componentBounds.top + seriesInfo.rowStart;
+        final y = componentBounds!.top + seriesInfo.rowStart;
 
-        final domainAxis = _chart.domainAxis;
-        final bounds = new Rectangle<int>(
-            componentBounds.left, y.round(), componentBounds.width, 0);
-        domainAxis.tickDrawStrategy
+        final domainAxis = _chart.domainAxis!;
+        final bounds = Rectangle<int>(
+            componentBounds!.left, y.round(), componentBounds!.width, 0);
+        domainAxis.tickDrawStrategy!
             .drawAxisLine(canvas, domainAxis.axisOrientation, bounds);
       });
     }
-  }
-
-  @override
-  GraphicsFactory get graphicsFactory => _graphicsFactory;
-
-  @override
-  set graphicsFactory(GraphicsFactory value) {
-    _graphicsFactory = value;
   }
 
   //
@@ -233,30 +228,30 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
 
   @override
   LayoutViewConfig get layoutConfig {
-    return new LayoutViewConfig(
+    return LayoutViewConfig(
         paintOrder: LayoutViewPaintOrder.point,
         position: LayoutPosition.Bottom,
         positionOrder: LayoutViewPositionOrder.symbolAnnotation);
   }
 
   @override
-  ViewMeasuredSizes measure(int maxWidth, int maxHeight) {
+  ViewMeasuredSizes measure(int? maxWidth, int? maxHeight) {
     // The sizing of component is not flexible. It's height is always a multiple
     // of the number of series rendered, even if that ends up taking all of the
     // available margin space.
-    return new ViewMeasuredSizes(
+    return ViewMeasuredSizes(
         preferredWidth: maxWidth, preferredHeight: _currentHeight);
   }
 
   @override
-  void layout(Rectangle<int> componentBounds, Rectangle<int> drawAreaBounds) {
+  void layout(Rectangle<int>? componentBounds, Rectangle<int>? drawAreaBounds) {
     _componentBounds = componentBounds;
 
     super.layout(componentBounds, drawAreaBounds);
   }
 
   @override
-  Rectangle<int> get componentBounds => _componentBounds;
+  Rectangle<int>? get componentBounds => _componentBounds;
 }
 
 class _SeriesInfo<D> {
@@ -265,7 +260,7 @@ class _SeriesInfo<D> {
   double symbolCenter;
 
   _SeriesInfo(
-      {@required this.rowHeight,
-      @required this.rowStart,
-      @required this.symbolCenter});
+      {required this.rowHeight,
+      required this.rowStart,
+      required this.symbolCenter});
 }

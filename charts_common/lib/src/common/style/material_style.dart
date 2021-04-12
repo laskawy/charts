@@ -39,20 +39,20 @@ class MaterialStyle implements Style {
 
   @override
   LineStyle createAxisLineStyle(
-      GraphicsFactory graphicsFactory, LineStyleSpec spec) {
+      GraphicsFactory graphicsFactory, LineStyleSpec? spec) {
     return graphicsFactory.createLinePaint()
       ..color = spec?.color ?? MaterialPalette.gray.shadeDefault
-      ..dashPattern = spec?.dashPattern
-      ..strokeWidth = spec?.thickness ?? 1;
+      ..dashPattern = spec!.dashPattern!
+      ..strokeWidth = spec.thickness ?? 1;
   }
 
   @override
   LineStyle createTickLineStyle(
-      GraphicsFactory graphicsFactory, LineStyleSpec spec) {
-    return graphicsFactory.createLinePaint()
+      GraphicsFactory? graphicsFactory, LineStyleSpec? spec) {
+    return graphicsFactory!.createLinePaint()
       ..color = spec?.color ?? MaterialPalette.gray.shadeDefault
-      ..dashPattern = spec?.dashPattern
-      ..strokeWidth = spec?.thickness ?? 1;
+      ..dashPattern = spec!.dashPattern!
+      ..strokeWidth = spec.thickness ?? 1;
   }
 
   @override
@@ -63,11 +63,11 @@ class MaterialStyle implements Style {
 
   @override
   LineStyle createGridlineStyle(
-      GraphicsFactory graphicsFactory, LineStyleSpec spec) {
-    return graphicsFactory.createLinePaint()
+      GraphicsFactory? graphicsFactory, LineStyleSpec? spec) {
+    return graphicsFactory!.createLinePaint()
       ..color = spec?.color ?? MaterialPalette.gray.shade300
-      ..dashPattern = spec?.dashPattern
-      ..strokeWidth = spec?.thickness ?? 1;
+      ..dashPattern = spec!.dashPattern!
+      ..strokeWidth = spec.thickness ?? 1;
   }
 
   @override
@@ -104,5 +104,5 @@ class MaterialStyle implements Style {
   Color get chartBackgroundColor => MaterialPalette.white;
 
   @override
-  double get rangeBandSize => 0.65;
+  double? get rangeBandSize => 0.65;
 }

@@ -16,6 +16,7 @@
 import 'dart:collection' show LinkedHashMap, HashSet;
 import 'dart:math' show Point, Rectangle, max;
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:meta/meta.dart' show protected, required;
 
 import '../../common/color.dart' show Color;
@@ -26,7 +27,6 @@ import '../cartesian/axis/axis.dart'
     show ImmutableAxis, OrdinalAxis, domainAxisKey, measureAxisKey;
 import '../cartesian/axis/scale.dart' show RangeBandConfig;
 import '../cartesian/cartesian_renderer.dart' show BaseCartesianRenderer;
-import '../common/base_chart.dart' show BaseChart;
 import '../common/chart_canvas.dart' show ChartCanvas, FillPatternType;
 import '../common/datum_details.dart' show DatumDetails;
 import '../common/processed_series.dart' show ImmutableSeries, MutableSeries;
@@ -34,20 +34,22 @@ import 'base_bar_renderer_config.dart' show BaseBarRendererConfig;
 import 'base_bar_renderer_element.dart'
     show BaseAnimatedBar, BaseBarRendererElement;
 
-const barGroupIndexKey = const AttributeKey<int>('BarRenderer.barGroupIndex');
+const barGroupIndexKey = AttributeKey<int>('BarRenderer.barGroupIndex');
 
-const barGroupCountKey = const AttributeKey<int>('BarRenderer.barGroupCount');
+const barGroupCountKey = AttributeKey<int>('BarRenderer.barGroupCount');
 
-const barGroupWeightKey =
-    const AttributeKey<double>('BarRenderer.barGroupWeight');
+const barGroupWeightKey = AttributeKey<double>('BarRenderer.barGroupWeight');
 
 const previousBarGroupWeightKey =
-    const AttributeKey<double>('BarRenderer.previousBarGroupWeight');
+    AttributeKey<double>('BarRenderer.previousBarGroupWeight');
 
-const stackKeyKey = const AttributeKey<String>('BarRenderer.stackKey');
+const allBarGroupWeightsKey =
+    AttributeKey<List<double>>('BarRenderer.allBarGroupWeights');
+
+const stackKeyKey = AttributeKey<String>('BarRenderer.stackKey');
 
 const barElementsKey =
-    const AttributeKey<List<BaseBarRendererElement>>('BarRenderer.elements');
+    AttributeKey<List<BaseBarRendererElement>>('BarRenderer.elements');
 
 const barWidthKey = AttributeKey<num>('BarRenderer.barWidth');
 
@@ -71,11 +73,13 @@ const barWidthKey = AttributeKey<num>('BarRenderer.barWidth');
 ///   such that bars from the last series will be "on top" of bars from previous
 ///   series.
 abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
-    B extends BaseAnimatedBar<D, R>> extends BaseCartesianRenderer<D> {
+    B extends BaseAnimatedBar<D?, R>> extends BaseCartesianRenderer<D> {
   final BaseBarRendererConfig config;
 
-  @protected
-  BaseChart<D> chart;
+  // Save the chart.vertical value at the start of every draw cycle. If it
+  // changes, delete all of the cached rendering element information so that we
+  // start with a fresh state.
+  var _lastVertical = true;
 
   /// Store a map of domain+barGroupIndex+category index to bars in a stack.
   ///
@@ -87,7 +91,8 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
   /// as the data was given to the chart. For the case where both grouping and
   /// stacking are disabled, this means that bars for data later in the series
   /// will be drawn "on top of" bars earlier in the series.
-  final _barStackMap = new LinkedHashMap<String, List<B>>();
+  // ignore: prefer_collection_literals, https://github.com/dart-lang/linter/issues/1649
+  final _barStackMap = LinkedHashMap<String, List<B>>();
 
   // Store a list of bar stacks that exist in the series data.
   //
@@ -97,23 +102,37 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
   final _currentKeys = <String>[];
 
   /// Stores a list of stack keys for each group key.
-  final _currentGroupsStackKeys = new LinkedHashMap<D, Set<String>>();
+  // ignore: prefer_collection_literals, https://github.com/dart-lang/linter/issues/1649
+  final _currentGroupsStackKeys = LinkedHashMap<D, Set<String>>();
 
   /// Optimization for getNearest to avoid scanning all data if possible.
-  ImmutableAxis<D> _prevDomainAxis;
+  ImmutableAxis<D>? _prevDomainAxis;
 
   BaseBarRenderer(
-      {@required this.config, String rendererId, int layoutPaintOrder})
+      {required this.config, String? rendererId, int? layoutPaintOrder})
       : super(
           rendererId: rendererId,
           layoutPaintOrder: layoutPaintOrder,
-          symbolRenderer:
-              config?.symbolRenderer ?? new RoundedRectSymbolRenderer(),
+          symbolRenderer: config.symbolRenderer,
         );
 
   @override
   void preprocessSeries(List<MutableSeries<D>> seriesList) {
-    var barGroupIndex = 0;
+    // If the orientation of the chart changed, delete all data from the last
+    // draw cycle. This allows us to start in a fresh state, so that we do not
+    // get bad animations from the previously drawn data.
+    //
+    // Ideally we should animate the old bars out smoothly in some ways, but
+    // this was the cheapest option.
+    if (_lastVertical != chart.vertical) {
+      _barStackMap.clear();
+      _currentKeys.clear();
+      _currentGroupsStackKeys.clear();
+    }
+
+    _lastVertical = chart.vertical;
+
+    int? barGroupIndex = 0;
 
     // Maps used to store the final measure offset of the previous series, for
     // each domain value.
@@ -131,18 +150,18 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     orderedSeriesList.forEach((MutableSeries<D> series) {
       var elements = <BaseBarRendererElement>[];
 
-      var domainFn = series.domainFn;
-      var measureFn = series.measureFn;
-      var measureOffsetFn = series.measureOffsetFn;
-      var fillPatternFn = series.fillPatternFn;
-      var strokeWidthPxFn = series.strokeWidthPxFn;
+      D Function(int)? domainFn = series.domainFn;
+      num? Function(int)? measureFn = series.measureFn;
+      num? Function(int)? measureOffsetFn = series.measureOffsetFn;
+      FillPatternType Function(int)? fillPatternFn = series.fillPatternFn;
+      num Function(int)? strokeWidthPxFn = series.strokeWidthPxFn;
       var barWidthPxFn = series.barWidthPxFn;
 
       series.dashPatternFn ??= (_) => config.dashPattern;
 
       // Identifies which stack the series will go in, by default a single
       // stack.
-      var stackKey = '__defaultKey__';
+      String? stackKey = '__defaultKey__';
 
       // Override the stackKey with seriesCategory if we are GROUPED_STACKED
       // so we have a way to choose which series go into which stacks.
@@ -160,12 +179,12 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
 
       var needsMeasureOffset = false;
 
-      for (var barIndex = 0; barIndex < series.data.length; barIndex++) {
-        dynamic datum = series.data[barIndex];
+      for (var barIndex = 0; barIndex < series.data!.length; barIndex++) {
+        dynamic datum = series.data![barIndex];
         final details = getBaseDetails(datum, barIndex);
 
         details.barStackIndex = 0;
-        details.measureOffset = measureOffsetFn(barIndex);
+        details.measureOffset = measureOffsetFn!(barIndex);
 
         if (fillPatternFn != null) {
           details.fillPattern = fillPatternFn(barIndex);
@@ -184,8 +203,8 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
         // series.
         if (config.stacked) {
           needsMeasureOffset = true;
-          var domain = domainFn(barIndex);
-          var measure = measureFn(barIndex);
+          var domain = domainFn!(barIndex);
+          var measure = measureFn!(barIndex);
 
           // We will render positive bars in one stack, and negative bars in a
           // separate stack. Keep track of the measure offsets for these stacks
@@ -203,25 +222,27 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
             details.barStackIndex = prevDetail.barStackIndex + 1;
           }
 
-          details.cumulativeTotal = measure != null ? measure : 0;
+          details.cumulativeTotal = measure ?? 0;
 
           // Get the previous series' measure offset.
           var measureOffset = measureOffsetFn(barIndex);
           if (prevDetail != null) {
-            measureOffset += prevDetail.measureOffsetPlusMeasure;
+            measureOffset =
+                measureOffset! + prevDetail.measureOffsetPlusMeasure;
 
-            details.cumulativeTotal += prevDetail.cumulativeTotal;
+            details.cumulativeTotal =
+                details.cumulativeTotal! + prevDetail.cumulativeTotal;
           }
 
           // And overwrite the details measure offset.
           details.measureOffset = measureOffset;
-          var measureValue = (measure != null ? measure : 0);
-          details.measureOffsetPlusMeasure = measureOffset + measureValue;
+          var measureValue = measure ?? 0;
+          details.measureOffsetPlusMeasure = measureOffset! + measureValue;
 
           categoryToDetailsMap[stackKey] = details;
         }
 
-        maxBarStackSize = max(maxBarStackSize, details.barStackIndex + 1);
+        maxBarStackSize = max(maxBarStackSize, details.barStackIndex! + 1);
 
         elements.add(details);
       }
@@ -230,7 +251,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
         // Override the measure offset function to return the measure offset we
         // calculated for each datum. This already includes any measure offset
         // that was configured in the series data.
-        series.measureOffsetFn = (index) => elements[index].measureOffset;
+        series.measureOffsetFn = (index) => elements[index!].measureOffset;
       }
 
       series.setAttr(barGroupIndexKey, barGroupIndex);
@@ -238,7 +259,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       series.setAttr(barElementsKey, elements);
 
       if (config.grouped) {
-        barGroupIndex++;
+        barGroupIndex = barGroupIndex! + 1;
       }
     });
 
@@ -262,7 +283,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       series.setAttr(barGroupCountKey, numBarGroups);
 
       if (barWeights.isNotEmpty) {
-        final barGroupIndex = series.getAttr(barGroupIndexKey);
+        final barGroupIndex = series.getAttr(barGroupIndexKey)!;
         final barWeight = barWeights[barGroupIndex];
 
         // In RTL mode, we need to grab the weights for the bars that follow
@@ -279,6 +300,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
 
         series.setAttr(barGroupWeightKey, barWeight);
         series.setAttr(previousBarGroupWeightKey, previousBarWeight);
+        series.setAttr(allBarGroupWeightsKey, barWeights);
       }
     });
   }
@@ -292,19 +314,19 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     final weights = <double>[];
 
     if (config.weightPattern != null) {
-      if (numBarGroups > config.weightPattern.length) {
-        throw new ArgumentError('Number of series exceeds length of weight '
+      if (numBarGroups > config.weightPattern!.length) {
+        throw ArgumentError('Number of series exceeds length of weight '
             'pattern ${config.weightPattern}');
       }
 
       var totalBarWeight = 0;
 
       for (var i = 0; i < numBarGroups; i++) {
-        totalBarWeight += config.weightPattern[i];
+        totalBarWeight += config.weightPattern![i];
       }
 
       for (var i = 0; i < numBarGroups; i++) {
-        weights.add(config.weightPattern[i] / totalBarWeight);
+        weights.add(config.weightPattern![i] / totalBarWeight);
       }
     } else {
       for (var i = 0; i < numBarGroups; i++) {
@@ -329,16 +351,16 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     if (seriesList.isNotEmpty) {
       // Given that charts can only have one domain axis, just grab it from the
       // first series.
-      final domainAxis = seriesList.first.getAttr(domainAxisKey);
+      final domainAxis = seriesList.first.getAttr(domainAxisKey)!;
       // rangeBandConfig is set when current config is not valid to render
       // bars (this is necessary with combo charts that have NumericAxis)
       if (!domainAxis.hasValidBarChartRangeBandConfig) {
-        domainAxis
-            .setRangeBandConfig(new RangeBandConfig.styleAssignedPercent());
+        domainAxis.setRangeBandConfig(RangeBandConfig.styleAssignedPercent());
       }
     }
   }
 
+  @override
   void update(List<ImmutableSeries<D>> seriesList, bool isAnimatingThisDraw) {
     _currentKeys.clear();
     _currentGroupsStackKeys.clear();
@@ -346,18 +368,19 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     final orderedSeriesList = getOrderedSeriesList(seriesList);
 
     orderedSeriesList.forEach((final ImmutableSeries<D> series) {
-      final domainAxis = series.getAttr(domainAxisKey) as ImmutableAxis<D>;
-      final domainFn = series.domainFn;
-      final measureAxis = series.getAttr(measureAxisKey) as ImmutableAxis<num>;
-      final measureFn = series.measureFn;
-      final colorFn = series.colorFn;
-      final dashPatternFn = series.dashPatternFn;
-      final fillColorFn = series.fillColorFn;
+      final domainAxis = series.getAttr(domainAxisKey) as ImmutableAxis<D>?;
+      final D Function(int)? domainFn = series.domainFn;
+      final measureAxis = series.getAttr(measureAxisKey) as ImmutableAxis<num?>;
+      final num? Function(int)? measureFn = series.measureFn;
+      final Color? Function(int)? colorFn = series.colorFn;
+      final List<int>? Function(int)? dashPatternFn = series.dashPatternFn;
+      final Color? Function(int)? fillColorFn = series.fillColorFn;
       final seriesStackKey = series.getAttr(stackKeyKey);
       final barGroupCount = series.getAttr(barGroupCountKey);
       final barGroupIndex = series.getAttr(barGroupIndexKey);
       final previousBarGroupWeight = series.getAttr(previousBarGroupWeightKey);
       final barGroupWeight = series.getAttr(barGroupWeightKey);
+      final allBarGroupWeights = series.getAttr(allBarGroupWeightsKey);
       final measureAxisPosition = measureAxis.getLocation(0.0);
       final barWidthPxFn = series.barWidthPxFn;
 
@@ -366,14 +389,14 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       // Save off domainAxis for getNearest.
       _prevDomainAxis = domainAxis;
 
-      for (var barIndex = 0; barIndex < series.data.length; barIndex++) {
-        final datum = series.data[barIndex];
-        BaseBarRendererElement details = elementsList[barIndex];
-        D domainValue = domainFn(barIndex);
+      for (var barIndex = 0; barIndex < series.data!.length; barIndex++) {
+        final datum = series.data![barIndex];
+        BaseBarRendererElement details = elementsList![barIndex];
+        D domainValue = domainFn!(barIndex);
 
-        final measureValue = measureFn(barIndex);
+        final measureValue = measureFn!(barIndex);
         final measureIsNull = measureValue == null;
-        final measureIsNegative = !measureIsNull && measureValue < 0;
+        final measureIsNegative = !measureIsNull && measureValue! < 0;
 
         // Each bar should be stored in barStackMap in a structure that mirrors
         // the visual rendering of the bars. Thus, they should be grouped by
@@ -382,7 +405,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
         // index to account for all combinations of grouping and stacking.
         var barStackMapKey = domainValue.toString() +
             '__' +
-            seriesStackKey +
+            seriesStackKey! +
             '__' +
             (measureIsNegative ? 'pos' : 'neg') +
             '__' +
@@ -393,8 +416,8 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
         var barStackList = _barStackMap.putIfAbsent(barStackMapKey, () => []);
 
         // If we already have an AnimatingBarfor that index, use it.
-        var animatingBar = barStackList.firstWhere((B bar) => bar.key == barKey,
-            orElse: () => null);
+        var animatingBar =
+            barStackList.firstWhereOrNull((B bar) => bar.key == barKey);
 
         // If we don't have any existing bar element, create a new bar and have
         // it animate in from the domain axis.
@@ -411,13 +434,14 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
               barGroupIndex: barGroupIndex,
               previousBarGroupWeight: previousBarGroupWeight,
               barGroupWeight: barGroupWeight,
-              color: colorFn(barIndex),
-              dashPattern: dashPatternFn(barIndex),
-              details: details,
+              allBarGroupWeights: allBarGroupWeights,
+                color: colorFn!(barIndex),
+              dashPattern: dashPatternFn!(barIndex),
+              details: detailsas R?,
               domainValue: domainFn(barIndex),
               domainAxis: domainAxis,
-              domainWidth: domainAxis.rangeBand.round(),
-              fillColor: fillColorFn(barIndex),
+              domainWidth: domainAxis!.rangeBand!.round(),
+              fillColor: fillColorFn!(barIndex),
               fillPattern: details.fillPattern,
               measureValue: 0.0,
               measureOffsetValue: 0.0,
@@ -449,7 +473,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
         // Store off stack keys for each bar group to help getNearest identify
         // groups of stacks.
         _currentGroupsStackKeys
-            .putIfAbsent(domainValue, () => new Set<String>())
+            .putIfAbsent(domainValue, () => <String>{})
             .add(barStackMapKey);
 
         // Get the barElement we are going to setup.
@@ -458,13 +482,14 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
           barGroupIndex: barGroupIndex,
           previousBarGroupWeight: previousBarGroupWeight,
           barGroupWeight: barGroupWeight,
-          color: colorFn(barIndex),
-          dashPattern: dashPatternFn(barIndex),
-          details: details,
+          allBarGroupWeights: allBarGroupWeights,
+            color: colorFn!(barIndex),
+          dashPattern: dashPatternFn!(barIndex),
+          details: detailsas R?,
           domainValue: domainFn(barIndex),
           domainAxis: domainAxis,
-          domainWidth: domainAxis.rangeBand.round(),
-          fillColor: fillColorFn(barIndex),
+          domainWidth: domainAxis!.rangeBand!.round(),
+          fillColor: fillColorFn!(barIndex),
           fillPattern: details.fillPattern,
           measureValue: measureValue,
           measureOffsetValue: details.measureOffset,
@@ -477,7 +502,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
           barWidthPx: barWidthPxFn?.call(barIndex),
         );
 
-        animatingBar.setNewTarget(barElement);
+        animatingBar.setNewTarget(barElement as R);
       }
     });
 
@@ -495,55 +520,56 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
   /// Generates a [BaseAnimatedBar] to represent the previous and current state
   /// of one bar on the chart.
   B makeAnimatedBar({
-    String key,
-    ImmutableSeries<D> series,
+    String? key,
+    ImmutableSeries<D>? series,
     dynamic datum,
-    int barGroupIndex,
-    double previousBarGroupWeight,
-    double barGroupWeight,
-    Color color,
-    List<int> dashPattern,
-    R details,
-    D domainValue,
-    ImmutableAxis<D> domainAxis,
-    int domainWidth,
-    num measureValue,
-    num measureOffsetValue,
-    ImmutableAxis<num> measureAxis,
-    double measureAxisPosition,
-    int numBarGroups,
-    Color fillColor,
-    FillPatternType fillPattern,
-    double strokeWidthPx,
-    bool measureIsNull,
-    bool measureIsNegative,
+    int? barGroupIndex,
+    double? previousBarGroupWeight,
+    double? barGroupWeight,
+    List<double>? allBarGroupWeights,
+      Color? color,
+    List<int>? dashPattern,
+    R? details,
+    D? domainValue,
+    ImmutableAxis<D>? domainAxis,
+    int? domainWidth,
+    num? measureValue,
+    num? measureOffsetValue,
+    ImmutableAxis<num?>? measureAxis,
+    double? measureAxisPosition,
+    int? numBarGroups,
+    Color? fillColor,
+    FillPatternType? fillPattern,
+    double? strokeWidthPx,
+    bool? measureIsNull,
+    bool? measureIsNegative,
     num barWidthPx,
   });
 
   /// Generates a [BaseBarRendererElement] to represent the rendering data for
   /// one bar on the chart.
-  R makeBarRendererElement({
-    int barGroupIndex,
-    double previousBarGroupWeight,
-    double barGroupWeight,
-    Color color,
-    List<int> dashPattern,
-    R details,
-    D domainValue,
-    ImmutableAxis<D> domainAxis,
-    int domainWidth,
-    num measureValue,
-    num measureOffsetValue,
-    ImmutableAxis<num> measureAxis,
-    double measureAxisPosition,
-    int numBarGroups,
-    Color fillColor,
-    FillPatternType fillPattern,
-    double strokeWidthPx,
-    bool measureIsNull,
-    bool measureIsNegative,
-    num barWidthPx,
-  });
+  R makeBarRendererElement(
+      {int? barGroupIndex,
+      double? previousBarGroupWeight,
+      double? barGroupWeight,
+      List<double>? allBarGroupWeights,
+      Color? color,
+      List<int>? dashPattern,
+      R? details,
+      D? domainValue,
+      ImmutableAxis<D>? domainAxis,
+      int? domainWidth,
+      num? measureValue,
+      num? measureOffsetValue,
+      ImmutableAxis<num?>? measureAxis,
+      double? measureAxisPosition,
+      int? numBarGroups,
+      Color? fillColor,
+      FillPatternType? fillPattern,
+      double? strokeWidthPx,
+      bool? measureIsNull,
+      bool? measureIsNegative,
+      num? barWidthPx,});
 
   @override
   void onAttach(BaseChart<D> chart) {
@@ -553,16 +579,16 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     // creation time, since chart onInit is called after the chart is created.
     this.chart = chart;
   }
-
   /// Paints the current bar data on the canvas.
-  void paint(ChartCanvas canvas, double animationPercent) {
+  @override
+  void paint(ChartCanvas canvas, double? animationPercent) {
     // Clean up the bars that no longer exist.
     if (animationPercent == 1.0) {
-      final keysToRemove = new HashSet<String>();
+      final keysToRemove = HashSet<String>();
 
       _barStackMap.forEach((String key, List<B> barStackList) {
         barStackList.retainWhere(
-            (B bar) => !bar.animatingOut && !bar.targetBar.measureIsNull);
+            (B bar) => !bar.animatingOut && !bar.targetBar!.measureIsNull!);
 
         if (barStackList.isEmpty) {
           keysToRemove.add(key);
@@ -596,11 +622,16 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
 
   /// Paints a stack of bar elements on the canvas.
   void paintBar(
-      ChartCanvas canvas, double animationPercent, Iterable<R> barElements);
+      ChartCanvas canvas, double? animationPercent, Iterable<R?> barElements);
 
   @override
   List<DatumDetails<D>> getNearestDatumDetailPerSeries(
-      Point<double> chartPoint, bool byDomain, Rectangle<int> boundsOverride) {
+    Point<double>? chartPoint,
+    bool byDomain,
+    Rectangle<int>? boundsOverride, {
+    bool selectOverlappingPoints = false,
+    bool selectExactEventLocation = false,
+  }) {
     var nearest = <DatumDetails<D>>[];
 
     // Was it even in the component bounds?
@@ -609,8 +640,8 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     }
 
     if (_prevDomainAxis is OrdinalAxis) {
-      final domainValue = _prevDomainAxis
-          .getDomain(renderingVertically ? chartPoint.x : chartPoint.y);
+      final domainValue = _prevDomainAxis!
+          .getDomain(renderingVertically ? chartPoint!.x : chartPoint!.y);
 
       // If we have a domainValue for the event point, then find all segments
       // that match it.
@@ -630,23 +661,23 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       }
 
       // Find the closest domain and only keep values that match the domain.
-      var minRelativeDistance = double.maxFinite;
-      var minDomainDistance = double.maxFinite;
-      var minMeasureDistance = double.maxFinite;
-      D nearestDomain;
+      double? minRelativeDistance = double.maxFinite;
+      double? minDomainDistance = double.maxFinite;
+      double? minMeasureDistance = double.maxFinite;
+      D? nearestDomain;
 
       // TODO: Optimize this with a binary search based on chartX.
       for (DatumDetails<D> detail in nearest) {
         if (byDomain) {
-          if (detail.domainDistance < minDomainDistance ||
+          if (detail.domainDistance! < minDomainDistance! ||
               (detail.domainDistance == minDomainDistance &&
-                  detail.measureDistance < minMeasureDistance)) {
+                  detail.measureDistance! < minMeasureDistance!)) {
             minDomainDistance = detail.domainDistance;
             minMeasureDistance = detail.measureDistance;
             nearestDomain = detail.domain;
           }
         } else {
-          if (detail.relativeDistance < minRelativeDistance) {
+          if (detail.relativeDistance! < minRelativeDistance!) {
             minRelativeDistance = detail.relativeDistance;
             nearestDomain = detail.domain;
           }
@@ -657,19 +688,19 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     }
 
     // If we didn't find anything, then keep an empty list.
-    nearest ??= <DatumDetails<D>>[];
 
     // Note: the details are already sorted by domain & measure distance in
     // base chart.
     return nearest;
   }
 
-  Rectangle<int> getBoundsForBar(R bar);
+  Rectangle<int>? getBoundsForBar(R? bar);
 
   @protected
-  List<BaseAnimatedBar<D, R>> _getSegmentsForDomainValue(D domainValue,
-      {bool where(BaseAnimatedBar<D, R> bar)}) {
-    final matchingSegments = <BaseAnimatedBar<D, R>>[];
+  List<BaseAnimatedBar<D?, R>> _getSegmentsForDomainValue(D? domainValue,
+      {bool Function(BaseAnimatedBar<D?, R> bar)? where}) {
+    final List<BaseAnimatedBar<D?, R>> matchingSegments =
+        <BaseAnimatedBar<D, R>>[];
 
     // [domainValue] is null only when the bar renderer is being used with in
     // a non ordinal axis (ex. date time axis).
@@ -682,9 +713,9 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
             .reduce((allKeys, keys) => allKeys..addAll(keys));
     stackKeys?.forEach((String stackKey) {
       if (where != null) {
-        matchingSegments.addAll(_barStackMap[stackKey].where(where));
+        matchingSegments.addAll(_barStackMap[stackKey]!.where(where));
       } else {
-        matchingSegments.addAll(_barStackMap[stackKey]);
+        matchingSegments.addAll(_barStackMap[stackKey]!);
       }
     });
 
@@ -694,24 +725,23 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
   // In the case of null [domainValue] return all values to be compared, since
   // we can't use the optimized comparison for [OrdinalAxis].
   List<DatumDetails<D>> _getVerticalDetailsForDomainValue(
-      D domainValue, Point<double> chartPoint) {
-    return new List<DatumDetails<D>>.from(_getSegmentsForDomainValue(
-            domainValue,
-            where: (BaseAnimatedBar<D, R> bar) => !bar.series.overlaySeries)
-        .map<DatumDetails<D>>((BaseAnimatedBar<D, R> bar) {
-      final barBounds = getBoundsForBar(bar.currentBar);
+      D? domainValue, Point<double>? chartPoint) {
+    return List<DatumDetails<D>>.from(_getSegmentsForDomainValue(domainValue,
+            where: (BaseAnimatedBar<D?, R> bar) => !bar.series!.overlaySeries!)
+        .map<DatumDetails<D?>>((BaseAnimatedBar<D?, R> bar) {
+      final barBounds = getBoundsForBar(bar.currentBar)!;
       final segmentDomainDistance =
-          _getDistance(chartPoint.x.round(), barBounds.left, barBounds.right);
+          _getDistance(chartPoint!.x.round(), barBounds.left, barBounds.right);
       final segmentMeasureDistance =
           _getDistance(chartPoint.y.round(), barBounds.top, barBounds.bottom);
 
-      final nearestPoint = new Point<double>(
+      final nearestPoint = Point<double>(
           clamp(chartPoint.x, barBounds.left, barBounds.right).toDouble(),
           clamp(chartPoint.y, barBounds.top, barBounds.bottom).toDouble());
 
       final relativeDistance = chartPoint.distanceTo(nearestPoint);
 
-      return new DatumDetails<D>(
+      return DatumDetails<D?>(
         series: bar.series,
         datum: bar.datum,
         domain: bar.domainValue,
@@ -723,18 +753,17 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
   }
 
   List<DatumDetails<D>> _getHorizontalDetailsForDomainValue(
-      D domainValue, Point<double> chartPoint) {
-    return new List<DatumDetails<D>>.from(_getSegmentsForDomainValue(
-            domainValue,
-            where: (BaseAnimatedBar<D, R> bar) => !bar.series.overlaySeries)
-        .map((BaseAnimatedBar<D, R> bar) {
-      final barBounds = getBoundsForBar(bar.currentBar);
+      D? domainValue, Point<double>? chartPoint) {
+    return List<DatumDetails<D>>.from(_getSegmentsForDomainValue(domainValue,
+            where: (BaseAnimatedBar<D?, R> bar) => !bar.series!.overlaySeries!)
+        .map((BaseAnimatedBar<D?, R> bar) {
+      final barBounds = getBoundsForBar(bar.currentBar)!;
       final segmentDomainDistance =
-          _getDistance(chartPoint.y.round(), barBounds.top, barBounds.bottom);
+          _getDistance(chartPoint!.y.round(), barBounds.top, barBounds.bottom);
       final segmentMeasureDistance =
           _getDistance(chartPoint.x.round(), barBounds.left, barBounds.right);
 
-      return new DatumDetails<D>(
+      return DatumDetails<D?>(
         series: bar.series,
         datum: bar.datum,
         domain: bar.domainValue,
@@ -765,12 +794,12 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       List<S> seriesList) {
     return (renderingVertically && config.stacked)
         ? config.grouped
-            ? new _ReversedSeriesIterable(seriesList)
+            ? _ReversedSeriesIterable(seriesList)
             : seriesList.reversed
         : seriesList;
   }
 
-  bool get isRtl => chart.context.isRtl;
+  bool get isRtl => chart.context!.isRtl;
 }
 
 /// Iterable wrapping the seriesList that returns the ReversedSeriesItertor.
@@ -780,7 +809,7 @@ class _ReversedSeriesIterable<S extends ImmutableSeries> extends Iterable<S> {
   _ReversedSeriesIterable(this.seriesList);
 
   @override
-  Iterator<S> get iterator => new _ReversedSeriesIterator(seriesList);
+  Iterator<S> get iterator => _ReversedSeriesIterator(seriesList);
 }
 
 /// Iterator that keeps reverse series order but keeps category order.
@@ -791,12 +820,12 @@ class _ReversedSeriesIterable<S extends ImmutableSeries> extends Iterable<S> {
 class _ReversedSeriesIterator<S extends ImmutableSeries> extends Iterator<S> {
   final List<S> _list;
   final _visitIndex = <int>[];
-  int _current;
+  int? _current;
 
   _ReversedSeriesIterator(List<S> list) : _list = list {
     // In the order of the list, save the category and the indices of the series
     // with the same category.
-    final categoryAndSeriesIndexMap = <String, List<int>>{};
+    final categoryAndSeriesIndexMap = <String?, List<int>>{};
     for (var i = 0; i < list.length; i++) {
       categoryAndSeriesIndexMap
           .putIfAbsent(list[i].seriesCategory, () => <int>[])
@@ -810,11 +839,11 @@ class _ReversedSeriesIterator<S extends ImmutableSeries> extends Iterator<S> {
 
   @override
   bool moveNext() {
-    _current = (_current == null) ? 0 : _current + 1;
+    _current = (_current == null) ? 0 : _current! + 1;
 
-    return _current < _list.length;
+    return _current! < _list.length;
   }
 
   @override
-  S get current => _list[_visitIndex[_current]];
+  S get current => _list[_visitIndex[_current!]];
 }

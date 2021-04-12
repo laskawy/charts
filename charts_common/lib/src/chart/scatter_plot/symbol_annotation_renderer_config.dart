@@ -44,11 +44,11 @@ class SymbolAnnotationRendererConfig<D> extends PointRendererConfig<D> {
   final double verticalSymbolTopPaddingPx;
 
   SymbolAnnotationRendererConfig(
-      {String customRendererId,
-      List<PointRendererDecorator> pointRendererDecorators,
+      {String? customRendererId,
+      List<PointRendererDecorator>? pointRendererDecorators,
       double radiusPx = 5.0,
-      SymbolRenderer symbolRenderer,
-      Map<String, SymbolRenderer> customSymbolRenderers,
+      SymbolRenderer? symbolRenderer,
+      Map<String, SymbolRenderer>? customSymbolRenderers,
       this.showBottomSeparatorLine = false,
       this.showSeparatorLines = true,
       this.verticalSymbolBottomPaddingPx = 5.0,
@@ -57,8 +57,8 @@ class SymbolAnnotationRendererConfig<D> extends PointRendererConfig<D> {
             customRendererId: customRendererId,
             pointRendererDecorators: pointRendererDecorators ??
                 [
-                  new ComparisonPointsDecorator(
-                      symbolRenderer: new RectangleRangeSymbolRenderer())
+                  ComparisonPointsDecorator(
+                      symbolRenderer: RectangleRangeSymbolRenderer())
                 ],
             radiusPx: radiusPx,
             symbolRenderer: symbolRenderer,
@@ -66,7 +66,7 @@ class SymbolAnnotationRendererConfig<D> extends PointRendererConfig<D> {
 
   @override
   SymbolAnnotationRenderer<D> build() {
-    return new SymbolAnnotationRenderer<D>(
+    return SymbolAnnotationRenderer<D>(
         config: this, rendererId: customRendererId);
   }
 }

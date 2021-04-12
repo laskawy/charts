@@ -30,37 +30,37 @@ class MyRow {
   final int campaign;
   final int campaignLower;
   final int campaignUpper;
-  final double radius;
-  final double boundsRadius;
-  final String shape;
+  final double? radius;
+  final double? boundsRadius;
+  final String? shape;
   MyRow(this.campaignString, this.campaign, this.campaignLower,
       this.campaignUpper, this.radius, this.boundsRadius, this.shape);
 }
 
 void main() {
   SymbolAnnotationRenderer renderer;
-  List<MutableSeries<int>> numericSeriesList;
+  late List<MutableSeries<int>> numericSeriesList;
 
   setUp(() {
     var myFakeDesktopData = [
       // This datum should get a default bounds line radius value.
-      new MyRow('MyCampaign1', 0, 0, 0, 3.0, null, null),
-      new MyRow('MyCampaign2', 10, 10, 12, 5.0, 4.0, 'shape 1'),
-      new MyRow('MyCampaign3', 10, 10, 14, 4.0, 4.0, 'shape 2'),
+      MyRow('MyCampaign1', 0, 0, 0, 3.0, null, null),
+      MyRow('MyCampaign2', 10, 10, 12, 5.0, 4.0, 'shape 1'),
+      MyRow('MyCampaign3', 10, 10, 14, 4.0, 4.0, 'shape 2'),
       // This datum should always get default radius values.
-      new MyRow('MyCampaign4', 13, 12, 15, null, null, null),
+      MyRow('MyCampaign4', 13, 12, 15, null, null, null),
     ];
 
     numericSeriesList = [
-      new MutableSeries<int>(new Series<MyRow, int>(
+      MutableSeries<int>(Series<MyRow?, int>(
           id: 'Desktop',
-          colorFn: (MyRow row, _) => MaterialPalette.blue.shadeDefault,
-          domainFn: (MyRow row, _) => row.campaign,
-          domainLowerBoundFn: (MyRow row, _) => row.campaignLower,
-          domainUpperBoundFn: (MyRow row, _) => row.campaignUpper,
-          measureFn: (MyRow row, _) => 0,
-          measureOffsetFn: (MyRow row, _) => 0,
-          radiusPxFn: (MyRow row, _) => row.radius,
+          colorFn: (MyRow? row, _) => MaterialPalette.blue.shadeDefault,
+          domainFn: (MyRow? row, _) => row!.campaign,
+          domainLowerBoundFn: (MyRow? row, _) => row!.campaignLower,
+          domainUpperBoundFn: (MyRow? row, _) => row!.campaignUpper,
+          measureFn: (MyRow? row, _) => 0,
+          measureOffsetFn: (MyRow? row, _) => 0,
+          radiusPxFn: (MyRow? row, _) => row!.radius,
           data: myFakeDesktopData)
         // Define a bounds line radius function.
         ..setAttribute(boundsLineRadiusPxFnKey,
@@ -70,8 +70,8 @@ void main() {
 
   group('preprocess', () {
     test('with numeric data and simple points', () {
-      renderer = new SymbolAnnotationRenderer<int>(
-          config: new SymbolAnnotationRendererConfig());
+      renderer = SymbolAnnotationRenderer<int>(
+          config: SymbolAnnotationRendererConfig());
 
       renderer.preprocessSeries(numericSeriesList);
 
@@ -80,9 +80,9 @@ void main() {
       // Validate Desktop series.
       var series = numericSeriesList[0];
 
-      var keyFn = series.keyFn;
+      String Function(int) keyFn = series.keyFn!;
 
-      var elementsList = series.getAttr(pointElementsKey);
+      var elementsList = series.getAttr(pointElementsKey)!;
       expect(elementsList.length, equals(4));
 
       expect(elementsList[0].radiusPx, equals(3.0));

@@ -26,15 +26,18 @@ import 'arc_renderer_decorator.dart' show ArcRendererDecorator;
 
 /// Configuration for an [ArcRenderer].
 class ArcRendererConfig<D> extends LayoutViewConfig
-    implements SeriesRendererConfig<D> {
-  final String customRendererId;
+    implements SeriesRendererConfig<D?> {
+  @override
+  final String? customRendererId;
 
   /// List of decorators applied to rendered arcs.
   final List<ArcRendererDecorator> arcRendererDecorators;
 
+  @override
   final SymbolRenderer symbolRenderer;
 
-  final rendererAttributes = new RendererAttributes();
+  @override
+  final rendererAttributes = RendererAttributes();
 
   /// Total arc length, in radians.
   ///
@@ -42,12 +45,12 @@ class ArcRendererConfig<D> extends LayoutViewConfig
   final double arcLength;
 
   /// If set, configures the arcWidth to be a percentage of the radius.
-  final double arcRatio;
+  final double? arcRatio;
 
   /// Fixed width of the arc within the radius.
   ///
   /// If arcRatio is set, this value will be ignored.
-  final int arcWidth;
+  final int? arcWidth;
 
   /// The order to paint this renderer on the canvas.
   final int layoutPaintOrder;
@@ -82,13 +85,14 @@ class ArcRendererConfig<D> extends LayoutViewConfig
       this.minHoleWidthForCenterContent = 30,
       this.startAngle = -pi / 2,
       this.strokeWidthPx = 2.0,
-      SymbolRenderer symbolRenderer})
-      : this.noDataColor = StyleFactory.style.noDataColor,
-        this.stroke = StyleFactory.style.arcStrokeColor,
-        this.symbolRenderer = symbolRenderer ?? new CircleSymbolRenderer();
+      SymbolRenderer? symbolRenderer})
+      : noDataColor = StyleFactory.style.noDataColor,
+        stroke = StyleFactory.style.arcStrokeColor,
+        symbolRenderer = symbolRenderer ?? CircleSymbolRenderer(),
+        super(positionOrder: 0);
 
   @override
   ArcRenderer<D> build() {
-    return new ArcRenderer<D>(config: this, rendererId: customRendererId);
+    return ArcRenderer<D>(config: this, rendererId: customRendererId);
   }
 }

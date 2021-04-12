@@ -18,17 +18,17 @@ import 'base_time_stepper.dart' show BaseTimeStepper;
 
 /// Month stepper.
 class MonthTimeStepper extends BaseTimeStepper {
-  static const _defaultIncrements = const [1, 2, 3, 4, 6, 12];
+  static const _defaultIncrements = [1, 2, 3, 4, 6, 12];
 
   final List<int> _allowedTickIncrements;
 
   MonthTimeStepper._internal(
-      DateTimeFactory dateTimeFactory, List<int> increments)
+      DateTimeFactory? dateTimeFactory, List<int> increments)
       : _allowedTickIncrements = increments,
         super(dateTimeFactory);
 
-  factory MonthTimeStepper(DateTimeFactory dateTimeFactory,
-      {List<int> allowedTickIncrements}) {
+  factory MonthTimeStepper(DateTimeFactory? dateTimeFactory,
+      {List<int>? allowedTickIncrements}) {
     // Set the default increments if null.
     allowedTickIncrements ??= _defaultIncrements;
 
@@ -37,8 +37,7 @@ class MonthTimeStepper extends BaseTimeStepper {
     // All increments must be > 0.
     assert(allowedTickIncrements.any((increment) => increment <= 0) == false);
 
-    return new MonthTimeStepper._internal(
-        dateTimeFactory, allowedTickIncrements);
+    return MonthTimeStepper._internal(dateTimeFactory, allowedTickIncrements);
   }
 
   @override
@@ -62,16 +61,16 @@ class MonthTimeStepper extends BaseTimeStepper {
     final newYear =
         time.year - (monthRemainder / DateTime.monthsPerYear).floor();
 
-    return dateTimeFactory.createDateTime(newYear, newMonth);
+    return dateTimeFactory!.createDateTime(newYear, newMonth);
   }
 
   @override
-  DateTime getNextStepTime(DateTime time, int tickIncrement) {
-    final incrementedMonth = time.month + tickIncrement;
+  DateTime getNextStepTime(DateTime? time, int tickIncrement) {
+    final incrementedMonth = time!.month + tickIncrement;
     final newMonth = incrementedMonth % DateTime.monthsPerYear;
     final newYear =
         time.year + (incrementedMonth / DateTime.monthsPerYear).floor();
 
-    return dateTimeFactory.createDateTime(newYear, newMonth);
+    return dateTimeFactory!.createDateTime(newYear, newMonth);
   }
 }

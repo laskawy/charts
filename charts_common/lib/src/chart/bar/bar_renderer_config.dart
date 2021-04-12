@@ -27,28 +27,30 @@ class BarRendererConfig<D> extends BaseBarRendererConfig<D> {
   final CornerStrategy cornerStrategy;
 
   /// Decorator for optionally decorating painted bars.
-  final BarRendererDecorator barRendererDecorator;
+  final BarRendererDecorator? barRendererDecorator;
 
   BarRendererConfig({
-    String customRendererId,
-    CornerStrategy cornerStrategy,
-    FillPatternType fillPattern,
-    BarGroupingType groupingType,
+    String? customRendererId,
+    CornerStrategy? cornerStrategy,
+    FillPatternType? fillPattern,
+    BarGroupingType? groupingType,
     int layoutPaintOrder = LayoutViewPaintOrder.bar,
     int minBarLengthPx = 0,
-    double stackHorizontalSeparator,
+    int? maxBarWidthPx,
+    int stackedBarPaddingPx = 1,
     double strokeWidthPx = 0.0,
     this.barRendererDecorator,
-    SymbolRenderer symbolRenderer,
-    List<int> weightPattern,
+    SymbolRenderer? symbolRenderer,
+    List<int>? weightPattern,
   })  : cornerStrategy = cornerStrategy ?? const ConstCornerStrategy(2),
         super(
           customRendererId: customRendererId,
           groupingType: groupingType ?? BarGroupingType.grouped,
           layoutPaintOrder: layoutPaintOrder,
           minBarLengthPx: minBarLengthPx,
+          maxBarWidthPx: maxBarWidthPx,
           fillPattern: fillPattern,
-          stackHorizontalSeparator: stackHorizontalSeparator,
+          stackedBarPaddingPx: stackedBarPaddingPx,
           strokeWidthPx: strokeWidthPx,
           symbolRenderer: symbolRenderer,
           weightPattern: weightPattern,
@@ -56,7 +58,7 @@ class BarRendererConfig<D> extends BaseBarRendererConfig<D> {
 
   @override
   BarRenderer<D> build() {
-    return new BarRenderer<D>(config: this, rendererId: customRendererId);
+    return BarRenderer<D>(config: this, rendererId: customRendererId);
   }
 
   @override
@@ -67,13 +69,13 @@ class BarRendererConfig<D> extends BaseBarRendererConfig<D> {
     if (!(other is BarRendererConfig)) {
       return false;
     }
-    return other.cornerStrategy == cornerStrategy && super == (other);
+    return other.cornerStrategy == cornerStrategy && super == other;
   }
 
   @override
   int get hashCode {
     var hash = super.hashCode;
-    hash = hash * 31 + (cornerStrategy?.hashCode ?? 0);
+    hash = hash * 31 + (cornerStrategy.hashCode);
     return hash;
   }
 }
@@ -130,7 +132,7 @@ class NoCornerStrategy extends ConstCornerStrategy {
   const NoCornerStrategy() : super(0);
 
   @override
-  bool operator ==(other) => (other is NoCornerStrategy) ? true : false;
+  bool operator ==(other) => other is NoCornerStrategy;
 
   @override
   int get hashCode => 31;

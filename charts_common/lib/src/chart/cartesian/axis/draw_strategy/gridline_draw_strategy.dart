@@ -33,16 +33,16 @@ import 'tick_draw_strategy.dart' show TickDrawStrategy;
 @immutable
 class GridlineRendererSpec<D> extends SmallTickRendererSpec<D> {
   const GridlineRendererSpec({
-    TextStyleSpec labelStyle,
-    LineStyleSpec lineStyle,
-    LineStyleSpec axisLineStyle,
-    TickLabelAnchor labelAnchor,
-    TickLabelJustification labelJustification,
-    int tickLengthPx,
-    int labelOffsetFromAxisPx,
-    int labelOffsetFromTickPx,
-    int minimumPaddingBetweenLabelsPx,
-    int labelRotation,
+    TextStyleSpec? labelStyle,
+    LineStyleSpec? lineStyle,
+    LineStyleSpec? axisLineStyle,
+    TickLabelAnchor? labelAnchor,
+    TickLabelJustification? labelJustification,
+    int? tickLengthPx,
+    int? labelOffsetFromAxisPx,
+    int? labelOffsetFromTickPx,
+    int? minimumPaddingBetweenLabelsPx,
+    int? labelRotation,
   }) : super(
             labelStyle: labelStyle,
             lineStyle: lineStyle,
@@ -57,8 +57,8 @@ class GridlineRendererSpec<D> extends SmallTickRendererSpec<D> {
 
   @override
   TickDrawStrategy<D> createDrawStrategy(
-          ChartContext context, GraphicsFactory graphicsFactory) =>
-      new GridlineTickDrawStrategy<D>(context, graphicsFactory,
+          ChartContext? context, GraphicsFactory? graphicsFactory) =>
+      GridlineTickDrawStrategy<D>(context, graphicsFactory,
           tickLengthPx: tickLengthPx,
           lineStyleSpec: lineStyle,
           labelStyleSpec: labelStyle,
@@ -71,15 +71,10 @@ class GridlineRendererSpec<D> extends SmallTickRendererSpec<D> {
           labelRotation: labelRotation);
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is GridlineRendererSpec && super == (other));
-  }
-
-  @override
-  int get hashCode {
-    int hashcode = super.hashCode;
-    return hashcode;
+        (other is GridlineRendererSpec && super == other);
   }
 }
 
@@ -87,22 +82,22 @@ class GridlineRendererSpec<D> extends SmallTickRendererSpec<D> {
 ///
 /// Extends [BaseTickDrawStrategy].
 class GridlineTickDrawStrategy<D> extends BaseTickDrawStrategy<D> {
-  int tickLength;
-  LineStyle lineStyle;
+  late int tickLength;
+  late LineStyle lineStyle;
 
   GridlineTickDrawStrategy(
-    ChartContext chartContext,
-    GraphicsFactory graphicsFactory, {
-    int tickLengthPx,
-    LineStyleSpec lineStyleSpec,
-    TextStyleSpec labelStyleSpec,
-    LineStyleSpec axisLineStyleSpec,
-    TickLabelAnchor labelAnchor,
-    TickLabelJustification labelJustification,
-    int labelOffsetFromAxisPx,
-    int labelOffsetFromTickPx,
-    int minimumPaddingBetweenLabelsPx,
-    int labelRotation,
+    ChartContext? chartContext,
+    GraphicsFactory? graphicsFactory, {
+    int? tickLengthPx,
+    LineStyleSpec? lineStyleSpec,
+    TextStyleSpec? labelStyleSpec,
+    LineStyleSpec? axisLineStyleSpec,
+    TickLabelAnchor? labelAnchor,
+    TickLabelJustification? labelJustification,
+    int? labelOffsetFromAxisPx,
+    int? labelOffsetFromTickPx,
+    int? minimumPaddingBetweenLabelsPx,
+    int? labelRotation,
   }) : super(chartContext, graphicsFactory,
             labelStyleSpec: labelStyleSpec,
             axisLineStyleSpec: axisLineStyleSpec ?? lineStyleSpec,
@@ -115,50 +110,51 @@ class GridlineTickDrawStrategy<D> extends BaseTickDrawStrategy<D> {
     lineStyle =
         StyleFactory.style.createGridlineStyle(graphicsFactory, lineStyleSpec);
 
-    this.tickLength = tickLengthPx ?? 0;
+    tickLength = tickLengthPx ?? 0;
   }
 
   @override
   void draw(ChartCanvas canvas, Tick<D> tick,
-      {@required AxisOrientation orientation,
-      @required Rectangle<int> axisBounds,
-      @required Rectangle<int> drawAreaBounds,
-      @required bool isFirst,
-      @required bool isLast}) {
-    Point<num> lineStart;
-    Point<num> lineEnd;
+      {required AxisOrientation? orientation,
+      required Rectangle<int>? axisBounds,
+      required Rectangle<int>? drawAreaBounds,
+      required bool isFirst,
+      required bool isLast}) {
+    Point<num>? lineStart;
+    Point<num>? lineEnd;
     switch (orientation) {
       case AxisOrientation.top:
-        final x = tick.locationPx;
-        lineStart = new Point(x, axisBounds.bottom - tickLength);
-        lineEnd = new Point(x, drawAreaBounds.bottom);
+        final x = tick.locationPx!;
+        lineStart = Point(x, axisBounds!.bottom - tickLength);
+        lineEnd = Point(x, drawAreaBounds!.bottom);
         break;
       case AxisOrientation.bottom:
-        final x = tick.locationPx;
-        lineStart = new Point(x, drawAreaBounds.top + tickLength);
-        lineEnd = new Point(x, axisBounds.top);
+        final x = tick.locationPx!;
+        lineStart = Point(x, drawAreaBounds!.top + tickLength);
+        lineEnd = Point(x, axisBounds!.top);
         break;
       case AxisOrientation.right:
-        final y = tick.locationPx;
+        final y = tick.locationPx!;
         if (tickLabelAnchor == TickLabelAnchor.after ||
             tickLabelAnchor == TickLabelAnchor.before) {
-          lineStart = new Point(axisBounds.right, y);
+          lineStart = Point(axisBounds!.right, y);
         } else {
-          lineStart = new Point(axisBounds.left + tickLength, y);
+          lineStart = Point(axisBounds!.left + tickLength, y);
         }
-        lineEnd = new Point(drawAreaBounds.left, y);
+        lineEnd = Point(drawAreaBounds!.left, y);
         break;
       case AxisOrientation.left:
-        final y = tick.locationPx;
+        final y = tick.locationPx!;
 
         if (tickLabelAnchor == TickLabelAnchor.after ||
             tickLabelAnchor == TickLabelAnchor.before) {
-          lineStart = new Point(axisBounds.left, y);
+          lineStart = Point(axisBounds!.left, y);
         } else {
-          lineStart = new Point(axisBounds.right - tickLength, y);
+          lineStart = Point(axisBounds!.right - tickLength, y);
         }
-        lineEnd = new Point(drawAreaBounds.right, y);
+        lineEnd = Point(drawAreaBounds!.right, y);
         break;
+      case null:
     }
 
     canvas.drawLine(

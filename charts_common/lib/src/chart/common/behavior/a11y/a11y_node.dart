@@ -15,7 +15,7 @@
 
 import 'dart:math' show Rectangle;
 
-typedef void OnFocus();
+typedef OnFocus = void Function();
 
 /// Container for accessibility data.
 class A11yNode {
@@ -26,7 +26,7 @@ class A11yNode {
   final String label;
 
   /// Callback when the A11yNode is focused by the native platform
-  OnFocus onFocus;
+  OnFocus? onFocus;
 
   A11yNode(this.label, this.boundingBox, {this.onFocus});
 }

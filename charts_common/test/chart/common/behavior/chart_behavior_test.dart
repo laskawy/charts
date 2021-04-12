@@ -30,7 +30,7 @@ class ParentBehavior implements ChartBehavior<String> {
 
   ParentBehavior(this.child);
 
-  String get role => null;
+  String? get role => null;
 
   @override
   void attachTo(BaseChart chart) {
@@ -45,24 +45,24 @@ class ParentBehavior implements ChartBehavior<String> {
 
 class ConcreteChart extends BaseChart<String> {
   @override
-  SeriesRenderer<String> makeDefaultRenderer() => null;
+  SeriesRenderer<String>? makeDefaultRenderer() => null;
 
   @override
-  List<DatumDetails<String>> getDatumDetails(SelectionModelType _) => null;
+  List<DatumDetails<String>>? getDatumDetails(SelectionModelType _) => null;
 }
 
 void main() {
-  ConcreteChart chart;
-  MockBehavior namedBehavior;
-  MockBehavior unnamedBehavior;
+  late ConcreteChart chart;
+  late MockBehavior namedBehavior;
+  late MockBehavior unnamedBehavior;
 
   setUp(() {
-    chart = new ConcreteChart();
+    chart = ConcreteChart();
 
-    namedBehavior = new MockBehavior();
+    namedBehavior = MockBehavior();
     when(namedBehavior.role).thenReturn('foo');
 
-    unnamedBehavior = new MockBehavior();
+    unnamedBehavior = MockBehavior();
     when(unnamedBehavior.role).thenReturn(null);
   });
 
@@ -87,7 +87,7 @@ void main() {
     });
 
     test('detach is called when name is reused', () {
-      final otherBehavior = new MockBehavior();
+      final otherBehavior = MockBehavior();
       when(otherBehavior.role).thenReturn('foo');
 
       chart.addBehavior(namedBehavior);
@@ -117,7 +117,7 @@ void main() {
     });
 
     test('detach is not called when name is different', () {
-      final otherBehavior = new MockBehavior();
+      final otherBehavior = MockBehavior();
       when(otherBehavior.role).thenReturn('bar');
 
       chart.addBehavior(namedBehavior);
@@ -133,7 +133,7 @@ void main() {
     });
 
     test('behaviors are removed when chart is destroyed', () {
-      final parentBehavior = new ParentBehavior(unnamedBehavior);
+      final parentBehavior = ParentBehavior(unnamedBehavior);
 
       chart.addBehavior(parentBehavior);
       // The parent should add the child behavoir.

@@ -19,18 +19,18 @@ import 'base_time_stepper.dart' show BaseTimeStepper;
 /// Day stepper.
 class DayTimeStepper extends BaseTimeStepper {
   // TODO: Remove the 14 day increment if we add week stepper.
-  static const _defaultIncrements = const [1, 2, 3, 7, 14];
+  static const _defaultIncrements = [1, 2, 3, 7, 14];
   static const _hoursInDay = 24;
 
   final List<int> _allowedTickIncrements;
 
   DayTimeStepper._internal(
-      DateTimeFactory dateTimeFactory, List<int> increments)
+      DateTimeFactory? dateTimeFactory, List<int> increments)
       : _allowedTickIncrements = increments,
         super(dateTimeFactory);
 
-  factory DayTimeStepper(DateTimeFactory dateTimeFactory,
-      {List<int> allowedTickIncrements}) {
+  factory DayTimeStepper(DateTimeFactory? dateTimeFactory,
+      {List<int>? allowedTickIncrements}) {
     // Set the default increments if null.
     allowedTickIncrements ??= _defaultIncrements;
 
@@ -39,7 +39,7 @@ class DayTimeStepper extends BaseTimeStepper {
     // All increments must be > 0.
     assert(allowedTickIncrements.any((increment) => increment <= 0) == false);
 
-    return new DayTimeStepper._internal(dateTimeFactory, allowedTickIncrements);
+    return DayTimeStepper._internal(dateTimeFactory, allowedTickIncrements);
   }
 
   @override
@@ -60,22 +60,22 @@ class DayTimeStepper extends BaseTimeStepper {
     final dayRemainder = (time.day - 1) % tickIncrement;
     // Subtract an extra hour in case stepping through a daylight saving change.
     final dayBefore = dayRemainder > 0
-        ? time.subtract(new Duration(hours: (_hoursInDay * dayRemainder) - 1))
+        ? time.subtract(Duration(hours: (_hoursInDay * dayRemainder) - 1))
         : time;
     // Explicitly leaving off hours and beyond to truncate to start of day.
-    final stepBefore = dateTimeFactory.createDateTime(
+    final stepBefore = dateTimeFactory!.createDateTime(
         dayBefore.year, dayBefore.month, dayBefore.day);
 
     return stepBefore;
   }
 
   @override
-  DateTime getNextStepTime(DateTime time, int tickIncrement) {
+  DateTime getNextStepTime(DateTime? time, int tickIncrement) {
     // Add an extra hour in case stepping through a daylight saving change.
     final stepAfter =
-        time.add(new Duration(hours: (_hoursInDay * tickIncrement) + 1));
+        time!.add(Duration(hours: (_hoursInDay * tickIncrement) + 1));
     // Explicitly leaving off hours and beyond to truncate to start of day.
-    return dateTimeFactory.createDateTime(
+    return dateTimeFactory!.createDateTime(
         stepAfter.year, stepAfter.month, stepAfter.day);
   }
 }

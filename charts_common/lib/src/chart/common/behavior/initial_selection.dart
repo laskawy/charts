@@ -25,13 +25,13 @@ class InitialSelection<D> implements ChartBehavior<D> {
   final SelectionModelType selectionModelType;
 
   /// List of series id of initially selected series.
-  final List<String> selectedSeriesConfig;
+  final List<String>? selectedSeriesConfig;
 
   /// List of [SeriesDatumConfig] that represents the initially selected datums.
-  final List<SeriesDatumConfig> selectedDataConfig;
+  final List<SeriesDatumConfig>? selectedDataConfig;
 
-  BaseChart<D> _chart;
-  LifecycleListener<D> _lifecycleListener;
+  BaseChart<D>? _chart;
+  LifecycleListener<D>? _lifecycleListener;
   bool _firstDraw = true;
 
   // TODO : When the series changes, if the user does not also
@@ -40,7 +40,7 @@ class InitialSelection<D> implements ChartBehavior<D> {
       {this.selectionModelType = SelectionModelType.info,
       this.selectedDataConfig,
       this.selectedSeriesConfig}) {
-    _lifecycleListener = new LifecycleListener<D>(onData: _setInitialSelection);
+    _lifecycleListener = LifecycleListener<D>(onData: _setInitialSelection);
   }
 
   void _setInitialSelection(List<MutableSeries<D>> seriesList) {
@@ -49,10 +49,10 @@ class InitialSelection<D> implements ChartBehavior<D> {
     }
     _firstDraw = false;
 
-    final immutableModel = new SelectionModel<D>.fromConfig(
+    final immutableModel = SelectionModel<D>.fromConfig(
         selectedDataConfig, selectedSeriesConfig, seriesList);
 
-    _chart.getSelectionModel(selectionModelType).updateSelection(
+    _chart!.getSelectionModel(selectionModelType).updateSelection(
         immutableModel.selectedDatum, immutableModel.selectedSeries,
         notifyListeners: false);
   }

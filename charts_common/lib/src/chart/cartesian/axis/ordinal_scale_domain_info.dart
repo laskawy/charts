@@ -25,21 +25,21 @@ class OrdinalScaleDomainInfo {
   int _index = 0;
 
   /// A map of domain value and the order it was added.
-  final _domainsToOrder = new HashMap<String, int>();
+  final _domainsToOrder = HashMap<String?, int>();
 
   /// A list of domain values kept to support [getDomainAtIndex].
-  final _domainList = <String>[];
+  final _domainList = <String?>[];
 
   OrdinalScaleDomainInfo();
 
   OrdinalScaleDomainInfo copy() {
-    return new OrdinalScaleDomainInfo()
+    return OrdinalScaleDomainInfo()
       .._domainsToOrder.addAll(_domainsToOrder)
       .._index = _index
       .._domainList.addAll(_domainList);
   }
 
-  void add(String domain) {
+  void add(String? domain) {
     if (!_domainsToOrder.containsKey(domain)) {
       _domainsToOrder[domain] = _index;
       _index += 1;
@@ -47,24 +47,24 @@ class OrdinalScaleDomainInfo {
     }
   }
 
-  int indexOf(String domain) => _domainsToOrder[domain];
+  int? indexOf(String? domain) => _domainsToOrder[domain];
 
-  String getDomainAtIndex(int index) {
+  String? getDomainAtIndex(int index) {
     assert(index >= 0);
     assert(index < _index);
     return _domainList[index];
   }
 
-  List<String> get domains => _domainList;
+  List<String?> get domains => _domainList;
 
-  String get first => _domainList.isEmpty ? null : _domainList.first;
+  String? get first => _domainList.isEmpty ? null : _domainList.first;
 
-  String get last => _domainList.isEmpty ? null : _domainList.last;
+  String? get last => _domainList.isEmpty ? null : _domainList.last;
 
-  bool get isEmpty => (_index == 0);
+  bool get isEmpty => _index == 0;
   bool get isNotEmpty => !isEmpty;
 
-  OrdinalExtents get extent => new OrdinalExtents.all(_domainList);
+  OrdinalExtents get extent => OrdinalExtents.all(_domainList);
 
   int get size => _index;
 

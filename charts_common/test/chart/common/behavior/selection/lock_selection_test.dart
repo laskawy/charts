@@ -24,16 +24,16 @@ import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 class MockChart extends Mock implements BaseChart {
-  GestureListener lastListener;
+  GestureListener? lastListener;
 
   @override
-  GestureListener addGestureListener(GestureListener listener) {
+  GestureListener? addGestureListener(GestureListener? listener) {
     lastListener = listener;
     return listener;
   }
 
   @override
-  void removeGestureListener(GestureListener listener) {
+  void removeGestureListener(GestureListener? listener) {
     expect(listener, equals(lastListener));
     lastListener = null;
   }
@@ -44,31 +44,31 @@ class MockSelectionModel extends Mock implements MutableSelectionModel {
 }
 
 void main() {
-  MockChart _chart;
-  MockSelectionModel _hoverSelectionModel;
-  MockSelectionModel _clickSelectionModel;
+  late MockChart _chart;
+  late MockSelectionModel _hoverSelectionModel;
+  late MockSelectionModel _clickSelectionModel;
 
   LockSelection _makeLockSelectionBehavior(
       SelectionModelType selectionModelType) {
     LockSelection behavior =
-        new LockSelection(selectionModelType: selectionModelType);
+        LockSelection(selectionModelType: selectionModelType);
 
     behavior.attachTo(_chart);
 
     return behavior;
   }
 
-  _setupChart({Point<double> forPoint, bool isWithinRenderer}) {
+  void _setupChart({Point<double>? forPoint, bool? isWithinRenderer}) {
     if (isWithinRenderer != null) {
       when(_chart.pointWithinRenderer(forPoint)).thenReturn(isWithinRenderer);
     }
   }
 
   setUp(() {
-    _hoverSelectionModel = new MockSelectionModel();
-    _clickSelectionModel = new MockSelectionModel();
+    _hoverSelectionModel = MockSelectionModel();
+    _clickSelectionModel = MockSelectionModel();
 
-    _chart = new MockChart();
+    _chart = MockChart();
     when(_chart.getSelectionModel(SelectionModelType.info))
         .thenReturn(_hoverSelectionModel);
     when(_chart.getSelectionModel(SelectionModelType.action))
@@ -79,14 +79,14 @@ void main() {
     test('can lock model with a selection', () {
       // Setup chart matches point with single domain single series.
       _makeLockSelectionBehavior(SelectionModelType.info);
-      Point<double> point = new Point(100.0, 100.0);
+      Point<double> point = Point(100.0, 100.0);
       _setupChart(forPoint: point, isWithinRenderer: true);
 
       when(_hoverSelectionModel.hasAnySelection).thenReturn(true);
 
       // Act
-      _chart.lastListener.onTapTest(point);
-      _chart.lastListener.onTap(point);
+      _chart.lastListener!.onTapTest(point);
+      _chart.lastListener!.onTap!(point);
 
       // Validate
       verify(_hoverSelectionModel.hasAnySelection);
@@ -98,22 +98,22 @@ void main() {
     test('can lock and unlock model', () {
       // Setup chart matches point with single domain single series.
       _makeLockSelectionBehavior(SelectionModelType.info);
-      Point<double> point = new Point(100.0, 100.0);
+      Point<double> point = Point(100.0, 100.0);
       _setupChart(forPoint: point, isWithinRenderer: true);
 
       when(_hoverSelectionModel.hasAnySelection).thenReturn(true);
 
       // Act
-      _chart.lastListener.onTapTest(point);
-      _chart.lastListener.onTap(point);
+      _chart.lastListener!.onTapTest(point);
+      _chart.lastListener!.onTap!(point);
 
       // Validate
       verify(_hoverSelectionModel.hasAnySelection);
       expect(_hoverSelectionModel.locked, equals(true));
 
       // Act
-      _chart.lastListener.onTapTest(point);
-      _chart.lastListener.onTap(point);
+      _chart.lastListener!.onTapTest(point);
+      _chart.lastListener!.onTap!(point);
 
       // Validate
       verify(_hoverSelectionModel.clearSelection());
@@ -125,14 +125,14 @@ void main() {
     test('does not lock model with empty selection', () {
       // Setup chart matches point with single domain single series.
       _makeLockSelectionBehavior(SelectionModelType.info);
-      Point<double> point = new Point(100.0, 100.0);
+      Point<double> point = Point(100.0, 100.0);
       _setupChart(forPoint: point, isWithinRenderer: true);
 
       when(_hoverSelectionModel.hasAnySelection).thenReturn(false);
 
       // Act
-      _chart.lastListener.onTapTest(point);
-      _chart.lastListener.onTap(point);
+      _chart.lastListener!.onTapTest(point);
+      _chart.lastListener!.onTap!(point);
 
       // Validate
       verify(_hoverSelectionModel.hasAnySelection);
@@ -146,7 +146,7 @@ void main() {
     test('detach removes listener', () {
       // Setup
       final behavior = _makeLockSelectionBehavior(SelectionModelType.info);
-      Point<double> point = new Point(100.0, 100.0);
+      Point<double> point = Point(100.0, 100.0);
       _setupChart(forPoint: point, isWithinRenderer: true);
       expect(_chart.lastListener, isNotNull);
 

@@ -1,4 +1,4 @@
-// Copyright 2018 the Charts project authors. Please see the AUTHORS file
+// Copyright 2019 the Charts project authors. Please see the AUTHORS file
 // for details.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,30 +16,23 @@
 import 'dart:collection' show Queue;
 import 'dart:math' as math;
 
-import 'package:charts_common/src/chart/layout/layout_view.dart';
 import 'package:charts_common/src/data/tree.dart';
 
 import 'base_treemap_renderer.dart';
 import 'treemap_renderer_config.dart';
 
 /// A treemap renderer that renders a squarified treemap.
-class SquarifiedTreeMapRenderer<D> extends BaseTreeMapRenderer<D> {
-  /// Default padding of a squarified treemap rectangle.
-  static const _defaultRectPadding =
-      ViewMargin(topPx: 26, leftPx: 4, rightPx: 4, bottomPx: 4);
-
+class SquarifiedTreeMapRenderer<D> extends BaseTreeMapRenderer<D?> {
   /// Golden ratio.
   final _ratio = .5 * (1 + math.sqrt(5));
 
-  SquarifiedTreeMapRenderer({String rendererId, TreeMapRendererConfig config})
+  SquarifiedTreeMapRenderer({String? rendererId, TreeMapRendererConfig? config})
       : super(
-            config: config ??
-                TreeMapRendererConfig(
-                    tileType: TileType.squarified,
-                    rectPaddingPx: _defaultRectPadding),
+            config: config as TreeMapRendererConfig<D>? ??
+                TreeMapRendererConfig(tileType: TreeMapTileType.squarified),
             rendererId: rendererId ?? BaseTreeMapRenderer.defaultRendererId);
 
-  /// Using squarification as the tiling algorithm for this tree map.
+  /// Uses squarification as the tiling algorithm for this tree map.
   ///
   /// The idea is to present treemap layouts in which the rectangles approximate
   /// squares.
@@ -50,8 +43,8 @@ class SquarifiedTreeMapRenderer<D> extends BaseTreeMapRenderer<D> {
   /// Squarify algorithm from Charted:
   /// https://cs.corp.google.com/piper///depot/google3/third_party/dart/charted/lib/layout/src/treemap_layout.dart?l=158
   @override
-  void tile(TreeNode node) {
-    final children = node.children;
+  void tile(TreeNode? node) {
+    final children = node!.children;
     if (children.isNotEmpty) {
       final remainingNodes = Queue<TreeNode>.from(children);
       final rect = availableLayoutBoundingRect(node);
@@ -59,7 +52,9 @@ class SquarifiedTreeMapRenderer<D> extends BaseTreeMapRenderer<D> {
 
       var bestScore = double.infinity;
       var width = math.min(rect.width, rect.height);
-      scaleArea(children, areaForRectangle(rect) / measureForTreeNode(node));
+      final measure = measureForTreeNode(node);
+      final scaleFactor = measure == 0 ? 0 : areaForRectangle(rect) / measure!;
+      scaleArea(children, scaleFactor);
 
       while (remainingNodes.isNotEmpty) {
         final child = remainingNodes.first;
@@ -69,7 +64,7 @@ class SquarifiedTreeMapRenderer<D> extends BaseTreeMapRenderer<D> {
         // Adding a new child rectangle improves score for the aspect ratio .
         if (score <= bestScore) {
           remainingNodes.removeFirst();
-          bestScore = score;
+          bestScore = score as double;
         } else {
           analyzer.removeLast();
           position(analyzer.nodes, rect, width, analyzer.layoutArea);
@@ -105,12 +100,12 @@ class _SquarifyRatioAnalyzer {
   /// Adds a node for processing.
   void addNode(TreeNode node) {
     nodes.add(node);
-    _layoutArea += _areaFn(node);
+    _layoutArea += _areaFn(node)!;
   }
 
   /// Removes the last node added for processing.
   void removeLast() {
-    _layoutArea -= _areaFn(nodes.removeLast());
+    _layoutArea -= _areaFn(nodes.removeLast())!;
   }
 
   /// Allocated area for laying out processing [nodes].
@@ -128,11 +123,11 @@ class _SquarifyRatioAnalyzer {
     var rMax = 0.0;
 
     // Finds rMin (i.e minimum area) and rMax (i.e maximum area) in [nodes].
-    for (var node in nodes) {
-      final area = _areaFn(node);
+    for (final node in nodes) {
+      final area = _areaFn(node)!;
       if (area <= 0) continue;
-      if (area < rMin) rMin = area;
-      if (area > rMax) rMax = area;
+      if (area < rMin) rMin = area as double;
+      if (area > rMax) rMax = area as double;
     }
     final sqWidth = _square(width);
     final sqArea = _square(_layoutArea);
@@ -152,4 +147,4 @@ class _SquarifyRatioAnalyzer {
 }
 
 /// A function type that returns area for a tree [node].
-typedef AreaFn = num Function(TreeNode node);
+typedef AreaFn = num? Function(TreeNode node);

@@ -18,19 +18,19 @@ import 'base_time_stepper.dart' show BaseTimeStepper;
 
 /// Hour stepper.
 class HourTimeStepper extends BaseTimeStepper {
-  static const _defaultIncrements = const [1, 2, 3, 4, 6, 12, 24];
+  static const _defaultIncrements = [1, 2, 3, 4, 6, 12, 24];
   static const _hoursInDay = 24;
   static const _millisecondsInHour = 3600 * 1000;
 
   final List<int> _allowedTickIncrements;
 
   HourTimeStepper._internal(
-      DateTimeFactory dateTimeFactory, List<int> increments)
+      DateTimeFactory? dateTimeFactory, List<int> increments)
       : _allowedTickIncrements = increments,
         super(dateTimeFactory);
 
-  factory HourTimeStepper(DateTimeFactory dateTimeFactory,
-      {List<int> allowedTickIncrements}) {
+  factory HourTimeStepper(DateTimeFactory? dateTimeFactory,
+      {List<int>? allowedTickIncrements}) {
     // Set the default increments if null.
     allowedTickIncrements ??= _defaultIncrements;
 
@@ -41,8 +41,7 @@ class HourTimeStepper extends BaseTimeStepper {
             .any((increment) => increment <= 0 || increment > 24) ==
         false);
 
-    return new HourTimeStepper._internal(
-        dateTimeFactory, allowedTickIncrements);
+    return HourTimeStepper._internal(dateTimeFactory, allowedTickIncrements);
   }
 
   @override
@@ -58,10 +57,10 @@ class HourTimeStepper extends BaseTimeStepper {
   /// Ex. Time is Aug 20 6 AM, increment is 4 hours. Returns 4 AM.
   @override
   DateTime getStepTimeBeforeInclusive(DateTime time, int tickIncrement) {
-    final nextDay = dateTimeFactory
+    final nextDay = dateTimeFactory!
         .createDateTime(time.year, time.month, time.day)
-        .add(new Duration(hours: _hoursInDay + 1));
-    final nextDayStart = dateTimeFactory.createDateTime(
+        .add(Duration(hours: _hoursInDay + 1));
+    final nextDayStart = dateTimeFactory!.createDateTime(
         nextDay.year, nextDay.month, nextDay.day);
 
     final hoursToNextDay =
@@ -72,7 +71,7 @@ class HourTimeStepper extends BaseTimeStepper {
     final hoursRemainder = hoursToNextDay % tickIncrement;
     final rewindHours =
         hoursRemainder == 0 ? 0 : tickIncrement - hoursRemainder;
-    final stepBefore = dateTimeFactory.createDateTime(
+    final stepBefore = dateTimeFactory!.createDateTime(
         time.year, time.month, time.day, time.hour - rewindHours);
 
     return stepBefore;
@@ -82,7 +81,7 @@ class HourTimeStepper extends BaseTimeStepper {
   ///
   /// [time] is expected to be a [DateTime] with the hour at start of the hour.
   @override
-  DateTime getNextStepTime(DateTime time, int tickIncrement) {
-    return time.add(new Duration(hours: tickIncrement));
+  DateTime getNextStepTime(DateTime? time, int tickIncrement) {
+    return time!.add(Duration(hours: tickIncrement));
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2018 the Charts project authors. Please see the AUTHORS file
+// Copyright 2019 the Charts project authors. Please see the AUTHORS file
 // for details.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import 'package:charts_common/common.dart';
 import 'package:charts_common/src/chart/common/base_chart.dart';
 import 'package:charts_common/src/chart/common/processed_series.dart';
 import 'package:charts_common/src/chart/common/selection_model/selection_model.dart';
@@ -41,14 +40,14 @@ class DomainOutliner<D> implements ChartBehavior<D> {
   /// defined.
   final double strokePaddingPx;
 
-  BaseChart<D> _chart;
+  late BaseChart<D> _chart;
 
-  LifecycleListener<D> _lifecycleListener;
+  LifecycleListener<D>? _lifecycleListener;
 
   DomainOutliner({
     this.selectionType = SelectionModelType.info,
-    double defaultStrokePx,
-    double strokePaddingPx,
+    double? defaultStrokePx,
+    double? strokePaddingPx,
   })  : defaultStrokePx = defaultStrokePx ?? 2.0,
         strokePaddingPx = strokePaddingPx ?? 1.0 {
     _lifecycleListener = LifecycleListener<D>(onPostprocess: _outline);
@@ -66,16 +65,16 @@ class DomainOutliner<D> implements ChartBehavior<D> {
       final colorFn = series.colorFn;
 
       if (colorFn != null) {
-        series.colorFn = (int index) {
+        series.colorFn = (int? index) {
           final color = colorFn(index);
           return selectionModel.isDatumSelected(series, index)
-              ? color.darker
+              ? color!.darker
               : color;
         };
       }
 
       if (strokeWidthPxFn != null) {
-        series.strokeWidthPxFn = (int index) {
+        series.strokeWidthPxFn = (int? index) {
           final strokeWidthPx = strokeWidthPxFn(index);
           if (!selectionModel.isDatumSelected(series, index)) {
             return strokeWidthPx;

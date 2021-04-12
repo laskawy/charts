@@ -18,17 +18,17 @@ import 'base_time_stepper.dart' show BaseTimeStepper;
 
 /// Year stepper.
 class YearTimeStepper extends BaseTimeStepper {
-  static const _defaultIncrements = const [1, 2, 5, 10, 50, 100, 500, 1000];
+  static const _defaultIncrements = [1, 2, 5, 10, 50, 100, 500, 1000];
 
   final List<int> _allowedTickIncrements;
 
   YearTimeStepper._internal(
-      DateTimeFactory dateTimeFactory, List<int> increments)
+      DateTimeFactory? dateTimeFactory, List<int> increments)
       : _allowedTickIncrements = increments,
         super(dateTimeFactory);
 
-  factory YearTimeStepper(DateTimeFactory dateTimeFactory,
-      {List<int> allowedTickIncrements}) {
+  factory YearTimeStepper(DateTimeFactory? dateTimeFactory,
+      {List<int>? allowedTickIncrements}) {
     // Set the default increments if null.
     allowedTickIncrements ??= _defaultIncrements;
 
@@ -37,8 +37,7 @@ class YearTimeStepper extends BaseTimeStepper {
     // All increments must be > 0.
     assert(allowedTickIncrements.any((increment) => increment <= 0) == false);
 
-    return new YearTimeStepper._internal(
-        dateTimeFactory, allowedTickIncrements);
+    return YearTimeStepper._internal(dateTimeFactory, allowedTickIncrements);
   }
 
   @override
@@ -53,11 +52,11 @@ class YearTimeStepper extends BaseTimeStepper {
   @override
   DateTime getStepTimeBeforeInclusive(DateTime time, int tickIncrement) {
     final yearRemainder = time.year % tickIncrement;
-    return dateTimeFactory.createDateTime(time.year - yearRemainder);
+    return dateTimeFactory!.createDateTime(time.year - yearRemainder);
   }
 
   @override
-  DateTime getNextStepTime(DateTime time, int tickIncrement) {
-    return dateTimeFactory.createDateTime(time.year + tickIncrement);
+  DateTime getNextStepTime(DateTime? time, int tickIncrement) {
+    return dateTimeFactory!.createDateTime(time!.year + tickIncrement);
   }
 }
