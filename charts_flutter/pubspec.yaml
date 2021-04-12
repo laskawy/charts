@@ -18,7 +18,7 @@ dependencies:
     git:
       url: https://github.com/laskawy/charts.git
       path: charts_common
-      ref: master
+      ref: customize_bars_width
   collection: ^1.15.0
   flutter:
     sdk: flutter

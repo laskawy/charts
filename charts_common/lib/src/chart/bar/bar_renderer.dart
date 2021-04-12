@@ -92,12 +92,14 @@ class BarRenderer<D>
       details.domain,
       domainAxis,
       domainAxis.rangeBand!.round(),
-      config.maxBarWidthPx,details.measure,
+      config.maxBarWidthPx,
+      details.measure,
       details.measureOffset,
       measureAxis,
       barGroupIndex,
       previousBarGroupWeight,
-      barGroupWeight,allBarGroupWeights,
+      barGroupWeight,
+      allBarGroupWeights,
       numBarGroups,
     );
 
@@ -148,10 +150,10 @@ class BarRenderer<D>
     double? previousBarGroupWeight,
     double? barGroupWeight,
     List<double>? allBarGroupWeights,
-      int? numBarGroups,
+    int? numBarGroups,
     bool? measureIsNull,
     bool? measureIsNegative,
-    num barWidthPx,
+    num? barWidthPx,
   }) {
     return AnimatedBar<D>(
         key: key, datum: datum, series: series, domainValue: domainValue!)
@@ -172,7 +174,8 @@ class BarRenderer<D>
         barGroupIndex: barGroupIndex,
         previousBarGroupWeight: previousBarGroupWeight,
         barGroupWeight: barGroupWeight,
-        allBarGroupWeights: allBarGroupWeights,numBarGroups: numBarGroups,
+        allBarGroupWeights: allBarGroupWeights,
+        numBarGroups: numBarGroups,
         measureIsNull: measureIsNull,
         measureIsNegative: measureIsNegative,
         barWidthPx: barWidthPx,
@@ -200,10 +203,10 @@ class BarRenderer<D>
     double? previousBarGroupWeight,
     double? barGroupWeight,
     List<double>? allBarGroupWeights,
-      int? numBarGroups,
+    int? numBarGroups,
     bool? measureIsNull,
     bool? measureIsNegative,
-    num barWidthPx,
+    num? barWidthPx,
   }) {
     return BarRendererElement<D>()
       ..color = color
@@ -216,18 +219,18 @@ class BarRenderer<D>
       ..measureIsNull = measureIsNull
       ..measureIsNegative = measureIsNegative
       ..bounds = _getBarBounds(
-          domainValue,
-          domainAxis!,
-          domainWidth!,
+        domainValue,
+        domainAxis!,
+        domainWidth!,
         config.maxBarWidthPx,
         measureValue,
-          measureOffsetValue,
-          measureAxis,
-          barGroupIndex,
-          previousBarGroupWeight,
-          barGroupWeight,
-          numBarGroups,
-          barWidthPx?.toDouble(),
+        measureOffsetValue,
+        measureAxis,
+        barGroupIndex,
+        previousBarGroupWeight,
+        barGroupWeight,
+        numBarGroups,
+        barWidthPx?.toDouble(),
       );
   }
 
@@ -419,15 +422,15 @@ class BarRenderer<D>
     ImmutableAxis<D?> domainAxis,
     int domainWidth,
     int? maxBarWidthPx,
-      num? measureValue,
+    num? measureValue,
     num? measureOffsetValue,
     ImmutableAxis<num?>? measureAxis,
     int? barGroupIndex,
     double? previousBarGroupWeight,
     double? barGroupWeight,
-      List<double>? allBarGroupWeights,
+    List<double>? allBarGroupWeights,
     int numBarGroups, [
-    double customWidthPx,
+    double? customWidthPx,
   ]) {
     // TODO: Investigate why this is negative for a DateTime domain
     // in RTL mode.
@@ -516,7 +519,7 @@ class BarRenderer<D>
     if (customWidthPx != null) {
       if (this.renderingVertically) {
         bounds = Rectangle<int>(
-          (domainCenter - barWidth / 2).round(),
+          (domainCenter ?? 0.0 - barWidth / 2).round(),
           measureEnd,
           domainEnd - domainStart,
           measureStart - measureEnd,
@@ -524,7 +527,7 @@ class BarRenderer<D>
       } else {
         bounds = Rectangle<int>(
           min(measureStart, measureEnd),
-          (domainCenter - barWidth / 2).round(),
+          (domainCenter ?? 0.0 - barWidth / 2).round(),
           (measureEnd - measureStart).abs(),
           domainEnd - domainStart,
         );

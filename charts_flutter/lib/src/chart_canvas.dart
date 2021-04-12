@@ -99,8 +99,8 @@ class ChartCanvas implements common.ChartCanvas {
 
   @override
   void drawPoint(
-      {Point? point,
-      double? radius,
+      {double? radius,
+      Point? point,
       common.Color? fill,
       common.Color? stroke,
       double? strokeWidthPx,
@@ -109,7 +109,7 @@ class ChartCanvas implements common.ChartCanvas {
     _pointPainter!.draw(
         canvas: canvas,
         paint: _paint,
-        point: Point(point.x.round(), point.y.round()),
+        point: Point(point!.x.round(), point.y.round()),
         radius: radius,
         fill: fill,
         stroke: stroke,
