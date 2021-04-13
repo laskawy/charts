@@ -21,7 +21,6 @@ import 'package:meta/meta.dart' show protected, required;
 
 import '../../common/color.dart' show Color;
 import '../../common/math.dart' show clamp;
-import '../../common/symbol_renderer.dart' show RoundedRectSymbolRenderer;
 import '../../data/series.dart' show AttributeKey;
 import '../cartesian/axis/axis.dart'
     show ImmutableAxis, OrdinalAxis, domainAxisKey, measureAxisKey;
@@ -435,7 +434,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
               previousBarGroupWeight: previousBarGroupWeight,
               barGroupWeight: barGroupWeight,
               allBarGroupWeights: allBarGroupWeights,
-                color: colorFn!(barIndex),
+              color: colorFn!(barIndex),
               dashPattern: dashPatternFn!(barIndex),
               details: details as R?,
               domainValue: domainFn(barIndex),
@@ -451,7 +450,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
               strokeWidthPx: details.strokeWidthPx,
               measureIsNull: measureIsNull,
               measureIsNegative: measureIsNegative,
-              barWidthPx: barWidthPxFn?.call(barIndex),
+              barWidthPx: barWidthPxFn.call(barIndex),
             );
 
             barStackList.add(animatingBar);
@@ -483,7 +482,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
           previousBarGroupWeight: previousBarGroupWeight,
           barGroupWeight: barGroupWeight,
           allBarGroupWeights: allBarGroupWeights,
-            color: colorFn!(barIndex),
+          color: colorFn!(barIndex),
           dashPattern: dashPatternFn!(barIndex),
           details: details as R?,
           domainValue: domainFn(barIndex),
@@ -527,7 +526,7 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
     double? previousBarGroupWeight,
     double? barGroupWeight,
     List<double>? allBarGroupWeights,
-      Color? color,
+    Color? color,
     List<int>? dashPattern,
     R? details,
     D? domainValue,
@@ -548,37 +547,30 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
 
   /// Generates a [BaseBarRendererElement] to represent the rendering data for
   /// one bar on the chart.
-  R makeBarRendererElement(
-      {int? barGroupIndex,
-      double? previousBarGroupWeight,
-      double? barGroupWeight,
-      List<double>? allBarGroupWeights,
-      Color? color,
-      List<int>? dashPattern,
-      R? details,
-      D? domainValue,
-      ImmutableAxis<D>? domainAxis,
-      int? domainWidth,
-      num? measureValue,
-      num? measureOffsetValue,
-      ImmutableAxis<num?>? measureAxis,
-      double? measureAxisPosition,
-      int? numBarGroups,
-      Color? fillColor,
-      FillPatternType? fillPattern,
-      double? strokeWidthPx,
-      bool? measureIsNull,
-      bool? measureIsNegative,
-      num? barWidthPx,});
+  R makeBarRendererElement({
+    int? barGroupIndex,
+    double? previousBarGroupWeight,
+    double? barGroupWeight,
+    List<double>? allBarGroupWeights,
+    Color? color,
+    List<int>? dashPattern,
+    R? details,
+    D? domainValue,
+    ImmutableAxis<D>? domainAxis,
+    int? domainWidth,
+    num? measureValue,
+    num? measureOffsetValue,
+    ImmutableAxis<num?>? measureAxis,
+    double? measureAxisPosition,
+    int? numBarGroups,
+    Color? fillColor,
+    FillPatternType? fillPattern,
+    double? strokeWidthPx,
+    bool? measureIsNull,
+    bool? measureIsNegative,
+    num? barWidthPx,
+  });
 
-  @override
-  void onAttach(BaseChart<D> chart) {
-    super.onAttach(chart);
-    // We only need the chart.context.isRtl setting, but context is not yet
-    // available when the default renderer is attached to the chart on chart
-    // creation time, since chart onInit is called after the chart is created.
-    this.chart = chart;
-  }
   /// Paints the current bar data on the canvas.
   @override
   void paint(ChartCanvas canvas, double? animationPercent) {

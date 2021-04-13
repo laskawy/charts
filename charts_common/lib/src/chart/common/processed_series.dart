@@ -73,7 +73,6 @@ class MutableSeries<D> extends ImmutableSeries<D> {
 
   @override
   AccessorFn<num>? measureUpperBoundFn;
-  AccessorFn<num> barWidthPxFn;
 
   @override
   AccessorFn<num?>? measureOffsetFn;
@@ -117,6 +116,9 @@ class MutableSeries<D> extends ImmutableSeries<D> {
 
   @override
   AccessorFn<TextStyleSpec>? outsideLabelStyleAccessorFn;
+
+  @override
+  late AccessorFn<num> barWidthPxFn;
 
   final _attrs = SeriesAttributes();
 
@@ -167,7 +169,7 @@ class MutableSeries<D> extends ImmutableSeries<D> {
         series.labelAccessorFn ?? ((i) => domainFn!(i).toString());
     insideLabelStyleAccessorFn = series.insideLabelStyleAccessorFn;
     outsideLabelStyleAccessorFn = series.outsideLabelStyleAccessorFn;
-    barWidthPxFn = series.barWidthPxFn;
+    barWidthPxFn = series.barWidthPxFn!;
 
     radiusPxFn = series.radiusPxFn;
     strokeWidthPxFn = series.strokeWidthPxFn;

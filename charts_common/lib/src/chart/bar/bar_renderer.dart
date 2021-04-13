@@ -15,7 +15,7 @@
 
 import 'dart:math' show max, min, Point, Rectangle;
 
-import 'package:meta/meta.dart' show protected, required;
+import 'package:meta/meta.dart' show protected;
 
 import '../../common/color.dart' show Color;
 import '../cartesian/axis/axis.dart'
@@ -229,7 +229,8 @@ class BarRenderer<D>
         barGroupIndex,
         previousBarGroupWeight,
         barGroupWeight,
-        numBarGroups,
+        allBarGroupWeights,
+        numBarGroups!,
         barWidthPx?.toDouble(),
       );
   }
@@ -476,7 +477,8 @@ class BarRenderer<D>
           : 0;
     } else {
       previousAverageWidth = adjustedBarGroupIndex > 0
-          ? ((customWidthPx) * (previousBarGroupWeight / adjustedBarGroupIndex))
+          ? ((customWidthPx) *
+                  (previousBarGroupWeight! / adjustedBarGroupIndex))
               .round()
           : 0;
     }
