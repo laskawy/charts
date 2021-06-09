@@ -596,12 +596,10 @@ class _RangeAnnotationLayoutView<D> extends LayoutView {
       case RangeAnnotationAxisType.domain:
         return _getDomainLabelPosition(
             labelType, bounds, annotationElement, labelElement);
-        break;
 
       case RangeAnnotationAxisType.measure:
         return _getMeasureLabelPosition(
             labelType, bounds, annotationElement, labelElement);
-        break;
       case null:
     }
     return null;
@@ -669,7 +667,6 @@ class _RangeAnnotationLayoutView<D> extends LayoutView {
       case AnnotationLabelPosition.margin:
       case AnnotationLabelPosition.auto:
         throw ArgumentError(_unresolvedAutoMessage);
-        break;
 
       case AnnotationLabelPosition.outside:
         switch (labelType) {
@@ -768,7 +765,6 @@ class _RangeAnnotationLayoutView<D> extends LayoutView {
       case AnnotationLabelPosition.margin:
       case AnnotationLabelPosition.auto:
         throw ArgumentError(_unresolvedAutoMessage);
-        break;
 
       case AnnotationLabelPosition.outside:
         switch (labelType) {
@@ -889,7 +885,6 @@ class _RangeAnnotationLayoutView<D> extends LayoutView {
       case AnnotationLabelPosition.margin:
       case AnnotationLabelPosition.auto:
         throw ArgumentError(_unresolvedAutoMessage);
-        break;
 
       case AnnotationLabelPosition.outside:
         switch (labelType) {
@@ -995,7 +990,6 @@ class _RangeAnnotationLayoutView<D> extends LayoutView {
       case AnnotationLabelPosition.margin:
       case AnnotationLabelPosition.auto:
         throw ArgumentError(_unresolvedAutoMessage);
-        break;
 
       case AnnotationLabelPosition.outside:
         switch (labelType) {

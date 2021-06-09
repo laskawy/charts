@@ -15,7 +15,7 @@
 
 import 'dart:math' show cos, min, sin, pi, Point, Rectangle;
 
-import 'package:meta/meta.dart' show immutable, required;
+import 'package:meta/meta.dart' show immutable;
 
 import '../../common/color.dart' show Color;
 import '../../common/graphics_factory.dart' show GraphicsFactory;

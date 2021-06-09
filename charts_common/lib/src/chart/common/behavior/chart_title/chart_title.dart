@@ -15,8 +15,6 @@
 
 import 'dart:math';
 
-import 'package:meta/meta.dart';
-
 import '../../../../common/graphics_factory.dart' show GraphicsFactory;
 import '../../../../common/style/style_factory.dart' show StyleFactory;
 import '../../../../common/text_element.dart'

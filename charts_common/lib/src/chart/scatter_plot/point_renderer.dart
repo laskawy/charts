@@ -17,7 +17,7 @@ import 'dart:collection' show LinkedHashMap;
 import 'dart:math' show min, Point, Rectangle;
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:meta/meta.dart' show protected, required;
+import 'package:meta/meta.dart' show protected;
 import 'package:vector_math/vector_math.dart' show Vector2;
 
 import '../../common/color.dart' show Color;
@@ -65,7 +65,7 @@ const defaultSymbolRendererId = '__default__';
 /// This is generally larger than the distance from any datum to the mouse.
 const _maxInitialDistance = 10000.0;
 
-class PointRenderer<D> extends BaseCartesianRenderer<D?> {
+class PointRenderer<D> extends BaseCartesianRenderer<D> {
   final PointRendererConfig config;
 
   final List<PointRendererDecorator> pointRendererDecorators;
@@ -98,7 +98,7 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
             symbolRenderer: config?.symbolRenderer ?? CircleSymbolRenderer());
 
   @override
-  void configureSeries(List<MutableSeries<D?>> seriesList) {
+  void configureSeries(List<MutableSeries<D>> seriesList) {
     assignMissingColors(seriesList, emptyCategoryUsesSinglePalette: false);
   }
 
@@ -201,14 +201,14 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
   }
 
   @override
-  void update(List<ImmutableSeries<D?>> seriesList, bool isAnimatingThisDraw) {
+  void update(List<ImmutableSeries<D>> seriesList, bool isAnimatingThisDraw) {
     _currentKeys.clear();
 
     // Build a list of sorted series IDs as we iterate through the list, used
     // later for sorting.
     final sortedSeriesIds = [];
 
-    seriesList.forEach((ImmutableSeries<D?> series) {
+    seriesList.forEach((ImmutableSeries<D> series) {
       sortedSeriesIds.add(series.id);
 
       final domainAxis = series.getAttr(domainAxisKey) as ImmutableAxis<D>?;
@@ -335,7 +335,7 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
   }
 
   @override
-  void onAttach(BaseChart<D?> chart) {
+  void onAttach(BaseChart<D> chart) {
     super.onAttach(chart);
     // We only need the chart.context.isRtl setting, but context is not yet
     // available when the default renderer is attached to the chart on chart
@@ -423,12 +423,12 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
   bool get isRtl => _chart?.context?.isRtl ?? false;
 
   @protected
-  DatumPoint<D?> getPoint(
+  DatumPoint<D> getPoint(
       final datum,
       D? domainValue,
       D? domainLowerBoundValue,
       D? domainUpperBoundValue,
-      ImmutableSeries<D?> series,
+      ImmutableSeries<D> series,
       ImmutableAxis<D?> domainAxis,
       num? measureValue,
       num? measureLowerBoundValue,
@@ -457,7 +457,7 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
         ? measureAxis!.getLocation(measureUpperBoundValue + measureOffsetValue!)
         : null;
 
-    return DatumPoint<D?>(
+    return DatumPoint<D>(
         datum: datum,
         domain: domainValue,
         series: series,
@@ -470,15 +470,15 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
   }
 
   @override
-  List<DatumDetails<D?>> getNearestDatumDetailPerSeries(
+  List<DatumDetails<D>> getNearestDatumDetailPerSeries(
     Point<double>? chartPoint,
     bool byDomain,
     Rectangle<int>? boundsOverride, {
     bool selectOverlappingPoints = false,
     bool selectExactEventLocation = false,
   }) {
-    final List<DatumDetails<D?>> nearest = <DatumDetails<D>>[];
-    final List<DatumDetails<D?>> inside = <DatumDetails<D>>[];
+    final List<DatumDetails<D>> nearest = <DatumDetails<D>>[];
+    final List<DatumDetails<D>> inside = <DatumDetails<D>>[];
 
     // Was it even in the component bounds?
     if (!isPointWithinBounds(chartPoint, boundsOverride)) {
@@ -553,7 +553,7 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
     return (selectOverlappingPoints && inside.isNotEmpty) ? inside : nearest;
   }
 
-  DatumDetails<D?> _createDatumDetails(
+  DatumDetails<D> _createDatumDetails(
       PointRendererElement<D> point, _Distances distances) {
     SymbolRenderer? pointSymbolRenderer;
     if (point.symbolRendererId == defaultSymbolRendererId) {
@@ -565,7 +565,7 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
       }
       pointSymbolRenderer = config.customSymbolRenderers![id!];
     }
-    return DatumDetails<D?>(
+    return DatumDetails<D>(
         datum: point.point.datum,
         domain: point.point.domain,
         series: point.point.series,
@@ -631,8 +631,8 @@ class PointRenderer<D> extends BaseCartesianRenderer<D?> {
   }
 
   @override
-  DatumDetails<D?> addPositionToDetailsForSeriesDatum(
-      DatumDetails<D?> details, SeriesDatum<D?> seriesDatum) {
+  DatumDetails<D> addPositionToDetailsForSeriesDatum(
+      DatumDetails<D> details, SeriesDatum<D?> seriesDatum) {
     final series = details.series!;
 
     final domainAxis = series.getAttr(domainAxisKey) as ImmutableAxis<D>;
@@ -730,7 +730,7 @@ class DatumPoint<D> extends Point<double> {
 }
 
 class PointRendererElement<D> {
-  late DatumPoint<D?> point;
+  late DatumPoint<D> point;
   int? index;
   Color? color;
   Color? fillColor;
@@ -742,7 +742,7 @@ class PointRendererElement<D> {
 
   PointRendererElement<D> clone() {
     return PointRendererElement<D>()
-      ..point = DatumPoint<D?>.from(point)
+      ..point = DatumPoint<D>.from(point)
       ..index = index
       ..color = color != null ? Color.fromOther(color: color!) : null
       ..fillColor =
@@ -755,8 +755,8 @@ class PointRendererElement<D> {
   }
 
   void updateAnimationPercent(PointRendererElement previous,
-      PointRendererElement target, double animationPercent) {
-    final targetPoint = target.point;
+      PointRendererElement<D> target, double animationPercent) {
+    final DatumPoint<D> targetPoint = target.point;
     final previousPoint = previous.point;
 
     final x = ((targetPoint.x - previousPoint.x) * animationPercent) +
@@ -790,7 +790,7 @@ class PointRendererElement<D> {
             previousPoint.yUpper!
         : null;
 
-    point = DatumPoint<D?>.from(targetPoint as DatumPoint<D?>,
+    point = DatumPoint<D>.from(targetPoint,
         x: x,
         xLower: xLower,
         xUpper: xUpper,
@@ -842,7 +842,7 @@ class AnimatedPoint<D> {
 
     // Set the target measure value to the axis position.
     var targetPoint = newTarget.point;
-    newTarget.point = DatumPoint<D?>.from(targetPoint,
+    newTarget.point = DatumPoint<D>.from(targetPoint,
         x: targetPoint.x,
         y: newTarget.measureAxisPosition!.roundToDouble(),
         yLower: newTarget.measureAxisPosition!.roundToDouble(),

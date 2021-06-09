@@ -15,7 +15,7 @@
 
 import 'dart:math';
 
-import 'package:meta/meta.dart' show immutable, required;
+import 'package:meta/meta.dart' show immutable;
 
 import '../../../../common/color.dart' show Color;
 import '../../../../common/graphics_factory.dart' show GraphicsFactory;

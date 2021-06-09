@@ -16,8 +16,6 @@
 import 'dart:collection' show LinkedHashMap;
 import 'dart:math' show max, Rectangle;
 
-import 'package:meta/meta.dart' show required;
-
 import '../../common/graphics_factory.dart' show GraphicsFactory;
 import '../cartesian/axis/axis.dart' show ImmutableAxis;
 import '../cartesian/cartesian_chart.dart' show CartesianChart;
@@ -135,12 +133,12 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
   }
 
   @override
-  DatumPoint<D?> getPoint(
+  DatumPoint<D> getPoint(
       final datum,
       D? domainValue,
       D? domainLowerBoundValue,
       D? domainUpperBoundValue,
-      ImmutableSeries<D?> series,
+      ImmutableSeries<D> series,
       ImmutableAxis<D?> domainAxis,
       num? measureValue,
       num? measureLowerBoundValue,
@@ -168,7 +166,7 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
     final measureUpperBoundPosition =
         domainUpperBoundPosition != null ? measurePosition : null;
 
-    return DatumPoint<D?>(
+    return DatumPoint<D>(
         datum: datum,
         domain: domainValue,
         series: series,
@@ -181,7 +179,7 @@ class SymbolAnnotationRenderer<D> extends PointRenderer<D>
   }
 
   @override
-  void onAttach(BaseChart<D?> chart) {
+  void onAttach(BaseChart<D> chart) {
     if (!(chart is CartesianChart)) {
       throw ArgumentError(
           'SymbolAnnotationRenderer can only be attached to a CartesianChart');

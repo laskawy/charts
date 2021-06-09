@@ -17,7 +17,6 @@ import 'dart:collection' show LinkedHashMap;
 import 'dart:math' show atan2, cos, max, sin, pi, Point, Rectangle;
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:meta/meta.dart' show required;
 
 import '../../common/color.dart' show Color;
 import '../../common/style/style_factory.dart' show StyleFactory;

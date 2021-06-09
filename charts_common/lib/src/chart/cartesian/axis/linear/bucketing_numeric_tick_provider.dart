@@ -13,8 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import 'package:meta/meta.dart' show required;
-
 import '../../../../common/graphics_factory.dart' show GraphicsFactory;
 import '../../../common/chart_context.dart' show ChartContext;
 import '../axis.dart' show AxisOrientation;
@@ -106,7 +104,8 @@ class BucketingNumericTickProvider extends NumericTickProvider {
         value: _threshold,
         textElement: graphicsFactory!
             .createTextElement(localFormatter.formatValue(_threshold!)),
-        locationPx: _showBucket! ? scale[_threshold] as double? : scale[0] as double?,
+        locationPx:
+            _showBucket! ? scale[_threshold] as double? : scale[0] as double?,
         labelOffsetPx:
             _showBucket! ? -0.5 * (scale[_threshold] - scale[0]) : 0.0);
     tickDrawStrategy!.decorateTicks(<Tick<num?>>[thresholdTick]);

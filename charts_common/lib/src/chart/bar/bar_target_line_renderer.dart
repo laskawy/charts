@@ -15,8 +15,6 @@
 
 import 'dart:math' show Point, Rectangle, max, min;
 
-import 'package:meta/meta.dart' show required;
-
 import '../../common/color.dart' show Color;
 import '../cartesian/axis/axis.dart'
     show ImmutableAxis, domainAxisKey, measureAxisKey;

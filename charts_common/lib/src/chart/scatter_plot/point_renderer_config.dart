@@ -22,7 +22,7 @@ import 'point_renderer_decorator.dart' show PointRendererDecorator;
 
 /// Configuration for a line renderer.
 class PointRendererConfig<D> extends LayoutViewConfig
-    implements SeriesRendererConfig<D?> {
+    implements SeriesRendererConfig<D> {
   @override
   final String? customRendererId;
 

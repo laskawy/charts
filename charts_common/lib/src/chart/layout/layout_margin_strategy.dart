@@ -14,7 +14,6 @@
 // limitations under the License.
 
 import 'dart:math' show Rectangle;
-import 'package:meta/meta.dart';
 import 'layout_view.dart';
 
 class SizeList {

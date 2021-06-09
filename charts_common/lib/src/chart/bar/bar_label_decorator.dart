@@ -15,8 +15,6 @@
 
 import 'dart:math' show Rectangle;
 
-import 'package:meta/meta.dart' show required;
-
 import '../../common/color.dart' show Color;
 import '../../common/graphics_factory.dart' show GraphicsFactory;
 import '../../common/text_element.dart' show TextDirection, TextElement;

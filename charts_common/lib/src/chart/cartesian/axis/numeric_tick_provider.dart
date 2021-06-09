@@ -15,8 +15,6 @@
 
 import 'dart:math' show log, log10e, max, min, pow;
 
-import 'package:meta/meta.dart' show required;
-
 import '../../../common/graphics_factory.dart' show GraphicsFactory;
 import '../../common/chart_context.dart' show ChartContext;
 import '../../common/unitconverter/identity_converter.dart'

@@ -15,8 +15,6 @@
 
 import 'dart:math' show Point, Rectangle, max;
 
-import 'package:meta/meta.dart' show required;
-
 import 'layout_config.dart' show LayoutConfig;
 import 'layout_manager.dart';
 import 'layout_margin_strategy.dart';

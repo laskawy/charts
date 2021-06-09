@@ -14,7 +14,6 @@
 // limitations under the License.
 
 import 'dart:math' show Rectangle;
-import 'package:meta/meta.dart';
 
 import '../common/behavior/chart_behavior.dart'
     show BehaviorPosition, OutsideJustification;

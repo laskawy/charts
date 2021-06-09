@@ -17,7 +17,7 @@ import 'dart:collection' show LinkedHashMap, HashSet;
 import 'dart:math' show Point, Rectangle, max;
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:meta/meta.dart' show protected, required;
+import 'package:meta/meta.dart' show protected;
 
 import '../../common/color.dart' show Color;
 import '../../common/math.dart' show clamp;
@@ -154,7 +154,6 @@ abstract class BaseBarRenderer<D, R extends BaseBarRendererElement,
       num? Function(int)? measureOffsetFn = series.measureOffsetFn;
       FillPatternType Function(int)? fillPatternFn = series.fillPatternFn;
       num Function(int)? strokeWidthPxFn = series.strokeWidthPxFn;
-      var barWidthPxFn = series.barWidthPxFn;
 
       series.dashPatternFn ??= (_) => config.dashPattern;
 

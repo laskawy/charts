@@ -190,7 +190,6 @@ class Slider<D> implements ChartBehavior<D> {
       default:
         throw ArgumentError('Slider does not support the event trigger '
             '"$eventTrigger"');
-        break;
     }
 
     // Set up chart draw cycle listeners.

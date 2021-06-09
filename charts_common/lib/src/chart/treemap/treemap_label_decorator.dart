@@ -23,7 +23,6 @@ import 'package:charts_common/src/common/text_element.dart';
 import 'package:charts_common/src/common/text_style.dart';
 import 'package:charts_common/src/common/text_utils.dart';
 import 'package:charts_common/src/data/series.dart';
-import 'package:meta/meta.dart';
 
 import 'treemap_renderer_decorator.dart';
 import 'treemap_renderer_element.dart';
